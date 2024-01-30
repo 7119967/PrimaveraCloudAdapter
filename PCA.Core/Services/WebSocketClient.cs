@@ -2,24 +2,55 @@
 
 public class WebSocketClient
 {
-   private static readonly string USER_NAME = "<userName>";
-    private static readonly string PASSWORD = "<password>";
-    private static readonly string HOST_NAME = "<hostName>";
-    private static readonly string OBJECT = "ApiEntityProject";
-    private static readonly string[] EVENTS = { "CREATE", "UPDATE", "DELETE" };
-    private static readonly string FILTERS = "projectName=*Construction";
+    private string HOST_NAME;
+    private int HOST_PORT;
+    private string USER_NAME;
+    private string PASSWORD;
+    private string[] OBJECT;
+    private string[] EVENTS;
+    private string FILTERS;
+    private bool subscription;
 
     private ClientWebSocket _webSocket;
 
-    public WebSocketClient(JsonNode authTokenResponse)
+    public WebSocketClient(JsonNode authTokenResponse, IServiceScopeFactory scopeFactory)
     {
+        var scope = scopeFactory.CreateScope();
+        var env = scope.ServiceProvider.GetRequiredService<IHostEnvironment>();
+        var configuration = scope.ServiceProvider.GetRequiredService<IConfiguration>();
+
+        if (env.IsProduction())
+        {
+            HOST_NAME = configuration["PrimaveraCloudApi:hostName"]!;
+            HOST_PORT = Convert.ToInt32(configuration["PrimaveraCloudApi:port"])!;
+            USER_NAME = configuration["PrimaveraCloudApi:userName"]!;
+            PASSWORD = configuration["PrimaveraCloudApi:password"]!;
+            OBJECT = (string[]?)(object)configuration["PrimaveraCloudApi:entityObjectType"]!;
+            EVENTS = (string[]?)(object)configuration["PrimaveraCloudApi:eventTypes"]!;
+            FILTERS = configuration["PrimaveraCloudApi:password"]!;
+            subscription = Convert.ToBoolean(configuration["PrimaveraCloudApi:subscription"])!;
+        }
+        else 
+        {
+            HOST_NAME = configuration["PrimaveraCloudApi:hostName"]!;
+            HOST_PORT = Convert.ToInt32(configuration["PrimaveraCloudApi:port"])!;
+            USER_NAME = configuration["PrimaveraCloudApi:userName"]!;
+            PASSWORD = configuration["PrimaveraCloudApi:password"]!;
+            OBJECT = (string[]?)(object)configuration["PrimaveraCloudApi:entityObjectType"]!;
+            EVENTS = (string[]?)(object)configuration["PrimaveraCloudApi:eventTypes"]!;
+            FILTERS = configuration["PrimaveraCloudApi:password"]!;
+            subscription = Convert.ToBoolean(configuration["PrimaveraCloudApi:subscription"])!;
+        }
+
+
+
         _webSocket = new ClientWebSocket();
         SetCredentials(authTokenResponse);
     }
 
     public async Task ConnectAsync()
     {
-        Uri uri = new Uri($"wss://{HOST_NAME}/api/events");
+        Uri uri = new Uri($"wss://{HOST_NAME}:{HOST_PORT}/api/events");
         await _webSocket.ConnectAsync(uri, CancellationToken.None);
 
 

@@ -4,3 +4,6 @@ global using System;
 global using Newtonsoft.Json;
 global using PCA.Core.Domain;
 global using System.Collections.Generic;
+global using Microsoft.Extensions.Configuration;
+global using Microsoft.Extensions.DependencyInjection;
+global using Microsoft.Extensions.Hosting;

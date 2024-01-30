@@ -5,8 +5,8 @@ public static class ServiceCollectionExtensions
     public static void ConfigureBusinessServices(this IServiceCollection services, IConfiguration? configuration)
     {
         var serviceProvider = services.BuildServiceProvider();
-        var env = serviceProvider.GetRequiredService<IWebHostEnvironment>();
-        
-        
+        var env = serviceProvider.GetRequiredService<IHostEnvironment>();
+
+        services.AddHostedService<ApiConsumer>();
     }
 }

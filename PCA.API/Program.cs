@@ -7,7 +7,7 @@ namespace PCA.API
     {
         public static void Main(string[] args)
         {
-            Log.Information("Starting application");
+            //Log.Information("Starting application");
             var builder = WebApplication.CreateBuilder(args);
             var configuration = builder.Configuration;
 
