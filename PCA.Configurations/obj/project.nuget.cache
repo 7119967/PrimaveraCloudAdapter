@@ -1,0 +1,12 @@
+{
+  "version": 2,
+  "dgSpecHash": "tnxE+0LvKh+/dLxRYPlLyD6HBA584Q9LU5zmK1Jmz9vQMoyDIlVkdifnDrPaw4DOyTOz6xlRoLsEg6+Z4NGY3g==",
+  "success": true,
+  "projectFilePath": "G:\\Мой диск\\Work\\Audiit\\Projects\\PrimaveraCloudAdapter\\PCA.Configurations\\PCA.Configurations.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\rashi\\.nuget\\packages\\microsoft.extensions.configuration.abstractions\\8.0.0\\microsoft.extensions.configuration.abstractions.8.0.0.nupkg.sha512",
+    "C:\\Users\\rashi\\.nuget\\packages\\microsoft.extensions.dependencyinjection.abstractions\\8.0.0\\microsoft.extensions.dependencyinjection.abstractions.8.0.0.nupkg.sha512",
+    "C:\\Users\\rashi\\.nuget\\packages\\microsoft.extensions.primitives\\8.0.0\\microsoft.extensions.primitives.8.0.0.nupkg.sha512"
+  ],
+  "logs": []
+}
