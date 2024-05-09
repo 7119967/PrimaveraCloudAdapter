@@ -26,3 +26,6 @@ global using Microsoft.Extensions.Logging;
 global using System.Net.WebSockets;
 global using Newtonsoft.Json.Linq;
 global using PCA.Core.Models;
+global using System.Net.Http.Headers;
+global using PCA.Infrastructure.Services.HttpClients;
+global using PCA.Infrastructure.Services.WebSocket;

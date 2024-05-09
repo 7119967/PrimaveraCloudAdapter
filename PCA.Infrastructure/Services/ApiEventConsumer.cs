@@ -24,7 +24,6 @@ public class ApiEventConsumer : BackgroundService, IApiConsumer
             var uri = $"wss://{HOST_NAME}/api/events";
             await _webSocketClient.ConnectAsync(uri);
             _webSocketClient.ReceiveMessageAsync();
-            // Console.ReadLine();
         }
         catch (Exception e)
         {

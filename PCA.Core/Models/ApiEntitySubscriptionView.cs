@@ -1,6 +1,6 @@
 namespace PCA.Core.Models;
 
-public class ApiSubscriptionView
+public class ApiEntitySubscriptionView
 {
     [JsonProperty("messageType")]
     public string MessageType { get; set; }

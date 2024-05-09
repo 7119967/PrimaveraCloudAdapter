@@ -1,4 +1,4 @@
-﻿namespace PCA.Infrastructure.Services;
+﻿namespace PCA.Infrastructure.Services.WebSocket;
 
 public class WebSocketClient : IWebSocketClient
 {
@@ -18,12 +18,7 @@ public class WebSocketClient : IWebSocketClient
     public void SetCredentials(Dictionary<string, object> authTokenResponse)
     {
         var tokenAuth = $"Bearer {authTokenResponse["accessToken"]}";
-
         _webSocket.Options.SetRequestHeader("Authorization", tokenAuth);
-        //_webSocket.Options.SetRequestHeader("x-prime-tenant", authTokenResponse["requestHeaders:x-prime-tenant"].ToString());
-        //_webSocket.Options.SetRequestHeader("x-prime-region", authTokenResponse["requestHeaders:x-prime-region"].ToString());
-        //_webSocket.Options.SetRequestHeader("x-prime-identity-app", authTokenResponse["requestHeaders:x-prime-identity-app"].ToString());
-
         var headers = authTokenResponse["requestHeaders"] as JObject;
         foreach (var header in headers!)
         {

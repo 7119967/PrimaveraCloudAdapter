@@ -1,4 +1,4 @@
-namespace PCA.Infrastructure.Services;
+namespace PCA.Infrastructure.Services.HttpClients;
 
 public class BaseHttpClient
 {

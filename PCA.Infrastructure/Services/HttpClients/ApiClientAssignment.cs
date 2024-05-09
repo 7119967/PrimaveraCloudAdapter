@@ -1,28 +1,26 @@
-namespace PCA.Infrastructure.Services;
+namespace PCA.Infrastructure.Services.HttpClients;
 
-public class ApiClientProject: IHttpClientStrategy<HttpResponseMessage>
+public class ApiClientAssignment: IHttpClientStrategy<HttpResponseMessage>
 {
-    private readonly IServiceScope _scope;
+    private EventNotification? _eventNotification;
     private readonly ApiHttpClient _httpClient;
-    private readonly ILogger<ApiClientProject> _logger;
+    private readonly ILogger<ApiClientAssignment> _logger;
     private readonly IUnitOfWork _unitOfWork;
-    private EventNotification _eventNotification;
-    
-    public ApiClientProject(IServiceCollection services)
+
+    public ApiClientAssignment(IServiceCollection services)
     {
         var serviceProvider = services.BuildServiceProvider();
         var scope = serviceProvider.CreateScope();
-        _scope = scope;
         _httpClient = new ApiHttpClient(services);
-        _unitOfWork = _scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
-        _logger = _scope.ServiceProvider.GetRequiredService<ILogger<ApiClientProject>>();
+        _unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
+        _logger = scope.ServiceProvider.GetRequiredService<ILogger<ApiClientAssignment>>();
     }
     
     public async Task GetDataAsync(EventNotification eventNotification, dynamic json)
     {
         _eventNotification = eventNotification;
-        ApiEntityProjectView apiEntityProject = JsonConvert.DeserializeObject<ApiEntityProjectView>(json);
-        var requestUri = $"/api/restapi/project/{apiEntityProject!.PrimaryKey}";
+        var apiEntity = JsonConvert.DeserializeObject<ApiEntityResourceAssignmentView>(json);
+        var requestUri = $"/api/restapi/assignment/{apiEntity!.PrimaryKey}";
         
         var response = await _httpClient.SendRequestAsync(requestUri);
 
@@ -40,12 +38,12 @@ public class ApiClientProject: IHttpClientStrategy<HttpResponseMessage>
     private async Task SaveData(dynamic message)
     {
         var eventDetails = JsonConvert.SerializeObject(message, Formatting.Indented);
-        var entity = new Project
+        var entity = new ResourceAssignment
         {
-            EventId = _eventNotification.Id,
+            EventId = _eventNotification!.Id,
             Json = eventDetails
         };
         
-        await _unitOfWork.ProjectRepository.Insert(entity, new CancellationToken());
+        await _unitOfWork.ResourceAssignmentRepository.Insert(entity, new CancellationToken());
     }
 }

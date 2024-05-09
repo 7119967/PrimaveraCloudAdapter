@@ -1,6 +1,4 @@
-using System.Net.Http.Headers;
-
-namespace PCA.Infrastructure.Services;
+namespace PCA.Infrastructure.Services.HttpClients;
 
 public class ApiHttpClient : BaseHttpClient
 {
@@ -69,6 +67,9 @@ public class ApiHttpClient : BaseHttpClient
 
     public async Task<HttpResponseMessage> SendRequestAsync(dynamic queryParams)
     {
+        HttpResponseMessage response = null;
+        var apiName = string.Empty;
+        
         var fullUrl = new Uri(_url + queryParams);
         var request = new HttpRequestMessage(HttpMethod.Get, fullUrl);
         var authTokenResponse = GetAuthTokenDetails();
@@ -77,9 +78,6 @@ public class ApiHttpClient : BaseHttpClient
 
         try
         {
-            HttpResponseMessage response = null;
-            var apiName = string.Empty;
-
             response = await _httpClient.SendAsync(request);
             _logger.LogDebug($"{GetType().Name} sent a request on {fullUrl}");
 
@@ -130,7 +128,7 @@ public class ApiHttpClient : BaseHttpClient
         var credentials = $"{USER_NAME}:{PASSWORD}";
         var credentialsBase64 = Convert.ToBase64String(Encoding.ASCII.GetBytes(credentials));
         _httpClient.DefaultRequestHeaders.Authorization = 
-            new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", credentialsBase64);
+            new AuthenticationHeaderValue("Basic", credentialsBase64);
         try
         {
             var response = await _httpClient.SendAsync(request);
@@ -164,17 +162,11 @@ public class ApiHttpClient : BaseHttpClient
     private void SetCredentials(Dictionary<string, object> authTokenResponse)
     {
         var tokenAuth = $"Bearer {authTokenResponse["accessToken"]}";
-
         _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", authTokenResponse["accessToken"].ToString());
-        //_httpClient.DefaultRequestHeaders.Add("x-prime-tenant", authTokenResponse["requestHeaders:x-prime-tenant"].ToString());
-        //_httpClient.DefaultRequestHeaders.Add("x-prime-region", authTokenResponse["requestHeaders:x-prime-region"].ToString());
-        //_httpClient.DefaultRequestHeaders.Add("x-prime-identity-app", authTokenResponse["requestHeaders:x-prime-identity-app"].ToString());
-
         var headers = authTokenResponse["requestHeaders"] as JObject;
         foreach (var header in headers!)
         {
             _httpClient.DefaultRequestHeaders.Add(header.Key, header.Value!.ToString());
         }
     }
-
 }

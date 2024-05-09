@@ -1,3 +1,6 @@
+using PCA.Infrastructure.Services.HttpClients;
+using PCA.Infrastructure.Services.WebSocket;
+
 namespace PCA.Infrastructure.Services;
 
 public class ApiEventProducer : IApiProducer
