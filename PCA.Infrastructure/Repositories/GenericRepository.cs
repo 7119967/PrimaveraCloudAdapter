@@ -1,7 +1,4 @@
-﻿using PCA.Core.Interfaces.Entities;
-using PCA.Core.Interfaces.Repositories;
-
-namespace PCA.Infrastructure.Repositories;
+﻿namespace PCA.Infrastructure.Repositories;
 
 public class GenericRepository<T> : IGenericRepository<T> where T : class
 {
@@ -147,8 +144,18 @@ public class GenericRepository<T> : IGenericRepository<T> where T : class
     {
         try
         {
-            Set.Attach(entityToUpdate);
-            Context.Entry(entityToUpdate).State = EntityState.Modified;
+            //Context.Entry(entityToUpdate).State = EntityState.Modified;
+            if (Context.Entry(entityToUpdate).State == EntityState.Detached)
+            {
+                Context!.ChangeTracker.Clear();
+                Set.Update(entityToUpdate);
+            }
+            else
+            {
+                Set.Attach(entityToUpdate);
+                Context.Entry(entityToUpdate).State = EntityState.Modified;
+            }
+
             await Context.SaveChangesAsync(cancellationToken);
             return (IEvent<T>)(object)new UpdatedEvent<T>("saved");
         }

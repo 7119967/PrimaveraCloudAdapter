@@ -1,15 +1,21 @@
-using PCA.Infrastructure.Services.HttpClients;
-
 namespace PCA.Infrastructure.Services;
 
 public class MessageProcessor : IMessageProcessor
 {
-    private EventNotification _eventNotification;
+    private EventNotification? _eventNotification;
     private readonly IUnitOfWork _unitOfWork;
-    private readonly ApiHttpClient _apiHttpClient;
-    private readonly ApiClientProject _apiClientProject;
     private readonly IServiceScope? _scope;
     private readonly IServiceCollection _services;
+    private readonly Dictionary<string, Type> _entityObjectTypeToApiClientTypeMap = new()
+    {
+        { "ApiEntityWBS", typeof(ApiClientWbs) },
+        { "ApiEntityProject", typeof(ApiClientProject) },
+        { "ApiEntityActivity", typeof(ApiClientActivity) },
+        { "ApiEntityResource", typeof(ApiClientResource) },
+        { "ApiEntityRelationship", typeof(ApiClientRelationship) },
+        { "ApiEntityProjectBudget", typeof(ApiClientProjectBudget) },
+        { "ApiEntityResourceRoleAssignment", typeof(ApiClientAssignment) },
+    };
 
     public MessageProcessor(IServiceCollection services)
     {
@@ -18,6 +24,7 @@ public class MessageProcessor : IMessageProcessor
         _scope = serviceProvider.CreateScope();
         _unitOfWork = _scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
     }
+
 
     public Task ProcessMessageAsync(string json)
     {
@@ -28,158 +35,61 @@ public class MessageProcessor : IMessageProcessor
             Console.WriteLine("New message received from Primavera Cloud is:");
             Console.WriteLine(JsonConvert.SerializeObject(message, Formatting.Indented));
             var obj = JsonConvert.DeserializeObject<ApiEntitySubscriptionView>(json);
-            switch (obj!.EntityObjectType)
+
+            if (_entityObjectTypeToApiClientTypeMap.TryGetValue(obj!.EntityObjectType, out var apiClientType))
             {
-                case "ApiEntityProject":
-                    ProcessApiEntityProject(obj, message!);
-                    break;
-                case "ApiEntityProjectBudget":
-                    ProcessApiEntityProjectBudget(obj, message!);
-                    break;
-                case "ApiEntityActivity":
-                    ProcessApiEntityActivity(obj, message!);
-                    break;                   
-                case "ApiEntityWBS":
-                    ProcessApiEntityWbs(obj, message!);
-                    break;                  
-                case "ApiEntityResource":
-                    ProcessApiEntityResource(obj, message!);
-                    break;
-                case "ApiEntityResourceRoleAssignment":
-                    ProcessApiEntityResourceRoleAssignment(obj, message!);
-                    break;                 
-                case "ApiEntityRelationship":
-                    ProcessApiEntityRelationship(obj, message!);
-                    break;
+                var method = typeof(MessageProcessor)
+                    .GetMethod("ProcessApiEntity", BindingFlags.NonPublic | BindingFlags.Instance)!
+                    .MakeGenericMethod(apiClientType);
+                method.Invoke(this, new object[] { obj, message! });
+            }
+            else
+            {
+                Console.WriteLine($"Unknown EntityObjectType: {obj.EntityObjectType}");
             }
         }
         catch (Exception ex)
         {
             Console.WriteLine($"An error occurred while processing the message: {ex.Message}");
         }
-        
+
         return Task.CompletedTask;
     }
 
-    private void ProcessApiEntityRelationship(ApiEntitySubscriptionView obj, object? message)
+    private EventNotification? GetEventNotification(ApiEntitySubscriptionView obj)
     {
-        switch (obj.MessageType)
-        {
-            case "EVENT":
-                SaveTransaction(_eventNotification, obj, message);
-                GetActivityRelationship(_eventNotification, message);
-                break;
-            case "SUCCESS":
-            case "ERROR":
-                _eventNotification = GetOrCreateEventNotification(obj);
-                break;
-        }
+        var existEventNotification = _unitOfWork.EventNotificationRepository.GetNoTracking()
+            .FirstOrDefault(e => e.EntityObjectType!.Contains(obj.EntityObjectType) && e.MessageType == "SUCCESS");
+
+        if (existEventNotification != null)
+            return existEventNotification;
+
+        return null;
     }
 
-    private void ProcessApiEntityResourceRoleAssignment(ApiEntitySubscriptionView obj, object? message)
-    {
-        switch (obj.MessageType)
-        {
-            case "EVENT":
-                SaveTransaction(_eventNotification, obj, message);
-                GetResourceAssignment(_eventNotification, message);
-                break;
-            case "SUCCESS":
-            case "ERROR":
-                _eventNotification = GetOrCreateEventNotification(obj);
-                break;
-        }
-    }
-
-    private void ProcessApiEntityResource(ApiEntitySubscriptionView obj, object? message)
-    {
-        switch (obj.MessageType)
-        {
-            case "EVENT":
-                SaveTransaction(_eventNotification, obj, message);
-                GetResource(_eventNotification, message);
-                break;
-            case "SUCCESS":
-            case "ERROR":   
-                _eventNotification = GetOrCreateEventNotification(obj);
-                break;
-        }
-    }
-
-    private void ProcessApiEntityWbs(ApiEntitySubscriptionView obj, object? message)
-    {
-        switch (obj.MessageType)
-        {
-            case "EVENT":
-                SaveTransaction(_eventNotification, obj, message);
-                GetWbs(_eventNotification, message);
-                break;
-            case "SUCCESS":
-            case "ERROR":
-                _eventNotification = GetOrCreateEventNotification(obj);
-                break;
-        }
-    }
-
-    private void ProcessApiEntityActivity(ApiEntitySubscriptionView obj, object? message)
-    {
-        switch (obj.MessageType)
-        {
-            case "EVENT":
-                SaveTransaction(_eventNotification, obj, message);
-                GetActivity(_eventNotification, message);
-                break;
-            case "SUCCESS":
-            case "ERROR":
-                _eventNotification = GetOrCreateEventNotification(obj);
-                break;
-        }
-    }
-
-    private void ProcessApiEntityProjectBudget(ApiEntitySubscriptionView obj, dynamic message)
-    {
-        switch (obj.MessageType)
-        {
-            case "EVENT":
-                SaveTransaction(_eventNotification, obj, message);
-                GetProjectBudget(_eventNotification, message);
-                break;
-            case "SUCCESS":
-            case "ERROR":
-                _eventNotification = GetOrCreateEventNotification(obj);
-                break;
-        }
-    }
-
-    private void ProcessApiEntityProject(ApiEntitySubscriptionView obj, dynamic message)
-    {
-        switch (obj.MessageType)
-        {
-            case "EVENT":
-                SaveTransaction(_eventNotification, obj, message);
-                GetProject(_eventNotification, message);
-                break;
-            case "SUCCESS":
-            case "ERROR":
-                _eventNotification = GetOrCreateEventNotification(obj);
-                break;
-        }
-    }
-    
-    private EventNotification GetOrCreateEventNotification(ApiEntitySubscriptionView obj)
+    private Subscription? GetSubscription(ApiEntitySubscriptionView obj)
     {
         var subscription = _unitOfWork.SubscriptionRepository.GetNoTracking()
             .FirstOrDefault(e => e.EntityObjectType!.Contains(obj.EntityObjectType));
-        
+
         if (subscription is null && obj.EntityObjectType == "ApiEntityProjectBudget")
         {
             subscription = _unitOfWork.SubscriptionRepository.GetNoTracking()
                 .FirstOrDefault(e => e.EntityObjectType!.Contains("ApiEntityProject"));
         }
 
-        var eventTypeList = new List<string>();
-        eventTypeList.Add(obj.EntityEventType);
-        
+        return subscription;
+    }
+
+    private EventNotification SaveEventNotification(ApiEntitySubscriptionView obj)
+    {
+        var subscription = GetSubscription(obj);
+
+        var eventTypeList = new List<string>
+        {
+            obj.EntityEventType
+        };
+
         var eventNotification = new EventNotification
         {
             // Subscription = subscription!,
@@ -190,13 +100,27 @@ public class MessageProcessor : IMessageProcessor
             EntityObjectType = obj.EntityObjectType,
             EntityEventType = eventTypeList
         };
-        
+
+        var existEventNotification = GetEventNotification(obj);
+
+        if (existEventNotification != null) 
+        {
+            if (existEventNotification.EntityEventType.Contains(obj.EntityEventType))
+            {
+                return existEventNotification;
+            }
+
+            existEventNotification.EntityEventType.Add(obj.EntityEventType);
+            var updated = _unitOfWork.EventNotificationRepository.Update(existEventNotification, new CancellationToken()).Result;
+            return (updated as InsertedEvent<EventNotification>)?.Object!; ; 
+        }
+
         var entity = _unitOfWork.EventNotificationRepository
             .Insert(eventNotification, new CancellationToken()).Result;
-        
-       return (entity as InsertedEvent<EventNotification>)?.Object!;
+
+        return (entity as InsertedEvent<EventNotification>)?.Object!;
     }
-    
+
     private void SaveTransaction(EventNotification eventNotification, ApiEntitySubscriptionView obj, dynamic message)
     {
         var eventDetails = JsonConvert.SerializeObject(message, Formatting.Indented);
@@ -207,64 +131,32 @@ public class MessageProcessor : IMessageProcessor
             EventTimeStamp = DateTimeOffset.UtcNow,
             EventDetails = eventDetails,
             SystemOrigin = "primavera-ca1.oraclecloud.com",
-            InitiatingUser= "vurbanovich@sarsystems.com"
+            InitiatingUser = "vurbanovich@sarsystems.com"
         };
         _unitOfWork.TransactionRepository.Insert(entity, new CancellationToken());
     }
-    
-    private void GetProject(EventNotification eventNotification, dynamic message)
-    {        
-        var apiClientEntity = new ApiClientProject(_services!);
-        var apiHttpClient = new ApiHttpClient(_scope!, apiClientEntity);
+
+    private void CallApiClient<T>(EventNotification eventNotification, dynamic message) where T : IHttpClientStrategy<HttpResponseMessage>
+    {
+        var apiClientEntity = (T)Activator.CreateInstance(typeof(T), _services!)!;
+        var apiHttpClient = new ApiHttpClient(_scope!, apiClientEntity!);
         var json = JsonConvert.SerializeObject(message, Formatting.Indented);
         apiHttpClient.ExecuteRequests(eventNotification, json).WaitAsync(new CancellationToken());
     }
-    
-    private void GetProjectBudget(EventNotification eventNotification, dynamic message)
+
+    private void ProcessApiEntity<T>(ApiEntitySubscriptionView obj, dynamic message) where T : IHttpClientStrategy<HttpResponseMessage>
     {
-        var apiClientEntity = new ApiClientProjectBudget(_services!);
-        var apiHttpClient = new ApiHttpClient(_scope!, apiClientEntity);
-        var json = JsonConvert.SerializeObject(message, Formatting.Indented);
-        apiHttpClient.ExecuteRequests(eventNotification, json).WaitAsync(new CancellationToken());
-    }
-    
-    private void GetActivity(EventNotification eventNotification, dynamic message)
-    {
-        var apiClientEntity = new ApiClientActivity(_services!);
-        var apiHttpClient = new ApiHttpClient(_scope!, apiClientEntity);
-        var json = JsonConvert.SerializeObject(message, Formatting.Indented);
-        apiHttpClient.ExecuteRequests(eventNotification, json).WaitAsync(new CancellationToken());
-    }
-    
-    private void GetActivityRelationship(EventNotification eventNotification, dynamic message)
-    {
-        var apiClientEntity = new ApiClientRelationship(_services!);
-        var apiHttpClient = new ApiHttpClient(_scope!, apiClientEntity);
-        var json = JsonConvert.SerializeObject(message, Formatting.Indented);
-        apiHttpClient.ExecuteRequests(eventNotification, json).WaitAsync(new CancellationToken());
-    }
-    
-    private void GetResource(EventNotification eventNotification, dynamic message)
-    {
-        var apiClientEntity = new ApiClientResource(_services!);
-        var apiHttpClient = new ApiHttpClient(_scope!, apiClientEntity);
-        var json = JsonConvert.SerializeObject(message, Formatting.Indented);
-        apiHttpClient.ExecuteRequests(eventNotification, json).WaitAsync(new CancellationToken());
-    }
-    
-    private void GetResourceAssignment(EventNotification eventNotification, dynamic message)
-    {
-        var apiClientEntity = new ApiClientAssignment(_services!);
-        var apiHttpClient = new ApiHttpClient(_scope!, apiClientEntity);
-        var json = JsonConvert.SerializeObject(message, Formatting.Indented);
-        apiHttpClient.ExecuteRequests(eventNotification, json).WaitAsync(new CancellationToken());
-    }    
-    
-    private void GetWbs(EventNotification eventNotification, dynamic message)
-    {
-        var apiClientEntity = new ApiClientWbs(_services!);
-        var apiHttpClient = new ApiHttpClient(_scope!, apiClientEntity);
-        var json = JsonConvert.SerializeObject(message, Formatting.Indented);
-        apiHttpClient.ExecuteRequests(eventNotification, json).WaitAsync(new CancellationToken());
+        switch (obj.MessageType)
+        {
+            case "EVENT":
+                var eventNotification = GetEventNotification(obj);
+                SaveTransaction(eventNotification, obj, message);
+                CallApiClient<T>(eventNotification, message);
+                break;
+            case "SUCCESS":
+            case "ERROR":
+                SaveEventNotification(obj);
+                break;
+        }
     }
 }
