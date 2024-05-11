@@ -1,6 +1,6 @@
 namespace PCA.Infrastructure.Services.HttpClients;
 
-public class ApiHttpClient : BaseHttpClient
+public class ApiHttpClient
 {
     private string HOST_NAME;
     private string USER_NAME;

@@ -125,9 +125,9 @@ public class SubscriptionsController : Controller
     private async Task UpdateOrInsert(SubscriptionView model, CancellationToken ctn)
     {
         var entity = _mapper.Map<Subscription>(model);
-        var result = _unitOfWork.SubscriptionRepository
-            .Get(e => e.EntityObjectType == entity.EntityObjectType).ToList();
-        if (result.Any())
+        var result = _unitOfWork.SubscriptionRepository.GetNoTracking()
+            .FirstOrDefault(e => e.EntityObjectType == entity.EntityObjectType);
+        if (result != null)
         {
             await _unitOfWork.SubscriptionRepository.Update(entity, ctn);
         }
