@@ -2,7 +2,6 @@ namespace PCA.Infrastructure.Services;
 
 public class MessageProcessor : IMessageProcessor
 {
-    private EventNotification? _eventNotification;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IServiceScope? _scope;
     private readonly IServiceCollection _services;
@@ -24,8 +23,7 @@ public class MessageProcessor : IMessageProcessor
         _scope = serviceProvider.CreateScope();
         _unitOfWork = _scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
     }
-
-
+    
     public Task ProcessMessageAsync(string json)
     {
         try
@@ -61,10 +59,7 @@ public class MessageProcessor : IMessageProcessor
         var existEventNotification = _unitOfWork.EventNotificationRepository.GetNoTracking()
             .FirstOrDefault(e => e.EntityObjectType!.Contains(obj.EntityObjectType) && e.MessageType == "SUCCESS");
 
-        if (existEventNotification != null)
-            return existEventNotification;
-
-        return null;
+        return existEventNotification;
     }
 
     private Subscription? GetSubscription(ApiEntitySubscriptionView obj)
@@ -143,7 +138,13 @@ public class MessageProcessor : IMessageProcessor
         var json = JsonConvert.SerializeObject(message, Formatting.Indented);
         apiHttpClient.ExecuteRequests(eventNotification, json).WaitAsync(new CancellationToken());
     }
-
+    
+/// <summary>
+/// This method invokes by ProcessMessageAsync method
+/// </summary>
+/// <param name="obj"></param>
+/// <param name="message"></param>
+/// <typeparam name="T"></typeparam>
     private void ProcessApiEntity<T>(ApiEntitySubscriptionView obj, dynamic message) where T : IHttpClientStrategy<HttpResponseMessage>
     {
         switch (obj.MessageType)

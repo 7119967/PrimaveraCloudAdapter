@@ -5,10 +5,10 @@ namespace PCA.API.Controllers;
 [Route("api/subscriptions")]
 public class SubscriptionsController : Controller
 {
-    private readonly ILogger<SubscriptionsController> _logger;
     private readonly IMapper _mapper;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IApiProducer _apiProducer;
+    private readonly ILogger<SubscriptionsController> _logger;
 
     /// <summary>
     /// 
@@ -18,10 +18,10 @@ public class SubscriptionsController : Controller
     /// <param name="unitOfWork"></param>
     /// <param name="apiProducer"></param>
     public SubscriptionsController(
-        ILogger<SubscriptionsController> logger,
         IMapper mapper,
         IUnitOfWork unitOfWork,
-        IApiProducer apiProducer
+        IApiProducer apiProducer,
+        ILogger<SubscriptionsController> logger
     )
     {
         _logger = logger;
@@ -33,6 +33,20 @@ public class SubscriptionsController : Controller
     [HttpPost("")]
     public async Task<IActionResult> Add([FromBody] SubscriptionView model, CancellationToken ctn = default)
     {
+        var context = new ValidationContext(model);
+        var results = new List<ValidationResult>();
+        if (!Validator.TryValidateObject(model, context, results, true))
+        {
+            Console.WriteLine("Failed to validate the SubscriptionView object");
+            foreach (var error in results)
+            {
+                _logger.LogInformation(error.ErrorMessage);
+            }
+            _logger.LogInformation("");
+        }
+        else
+            _logger.LogInformation($"The SubscriptionView object was validated successfully. Name: {model.EntityObjectType}\n");
+       
         try
         {
             var message = GetJsonObject(model).ToString();
@@ -66,13 +80,9 @@ public class SubscriptionsController : Controller
     {
         var entity = await _unitOfWork.SubscriptionRepository.GetAll(ctn);
 
-        if (entity is null)
-        {
-            _logger.LogInformation("Entity does not exist");
-            throw new BaseException("Entity does not exist");
-        }
-
-        return Ok(entity);
+        if (entity is not null) return Ok(entity);
+        _logger.LogInformation("Entity does not exist");
+        throw new BaseException("Entity does not exist");
     }
 
     [HttpPut("")]

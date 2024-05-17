@@ -4,6 +4,7 @@ public class WebSocketClient : IWebSocketClient
 {
     private readonly ClientWebSocket _webSocket;
     private readonly MessageProcessor _messageProcessor;
+    private readonly ILogger<WebSocketClient> _logger;
 
     /// <summary>
     /// 
@@ -13,6 +14,8 @@ public class WebSocketClient : IWebSocketClient
     {
         _webSocket = new ClientWebSocket();
         _messageProcessor = new MessageProcessor(services);
+         var sp = services.BuildServiceProvider();
+         _logger = sp.GetRequiredService<ILogger<WebSocketClient>>();
     }
 
     public void SetCredentials(Dictionary<string, object> authTokenResponse)
@@ -34,35 +37,48 @@ public class WebSocketClient : IWebSocketClient
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Connection error: {ex.Message}");
+            _logger.LogInformation($"Connection error: {ex.Message}");
+            throw new BaseException($"Connection error: {ex.Message}");
         }
     }
 
     public async Task SendMessageAsync(string message)
     {
-        var buffer = new ArraySegment<byte>(Encoding.UTF8.GetBytes(message));
-        if (_webSocket.State == WebSocketState.Open)
+        try
         {
-            await _webSocket.SendAsync(buffer, WebSocketMessageType.Text, true, CancellationToken.None);
+            var buffer = new ArraySegment<byte>(Encoding.UTF8.GetBytes(message));
+            if (_webSocket.State == WebSocketState.Open)
+            {
+                await _webSocket.SendAsync(buffer, WebSocketMessageType.Text, true, CancellationToken.None);
+            }
         }
-        else
+        catch (Exception ex)
         {
-            Console.WriteLine($"Connection error: ");
+            _logger.LogInformation($"Connection error: {ex.Message}");
+            throw new BaseException($"Connection error: {ex.Message}");
         }
     }
 
     public async void ReceiveMessageAsync()
     {
-        while (_webSocket.State == WebSocketState.Open)
+        try
         {
-            var buffer = new ArraySegment<byte>(new byte[8192]);
-            var result = await _webSocket.ReceiveAsync(buffer, CancellationToken.None);
-
-            if (result.MessageType == WebSocketMessageType.Text)
+            while (_webSocket.State == WebSocketState.Open)
             {
-                var message = Encoding.UTF8.GetString(buffer.Array!, 0, result.Count);
-                await ProcessMessage(message);
+                var buffer = new ArraySegment<byte>(new byte[8192]);
+                var result = await _webSocket.ReceiveAsync(buffer, CancellationToken.None);
+
+                if (result.MessageType == WebSocketMessageType.Text)
+                {
+                    var message = Encoding.UTF8.GetString(buffer.Array!, 0, result.Count);
+                    await ProcessMessage(message);
+                }
             }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogInformation($"Connection error: {ex.Message}");
+            throw new BaseException($"Connection error: {ex.Message}");
         }
     }
 
@@ -74,7 +90,8 @@ public class WebSocketClient : IWebSocketClient
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"An error occurred while processing the message: {message}");
+            _logger.LogInformation($"An error occurred while processing the message: {ex.Message}");
+            throw new BaseException($"An error occurred while processing the message: {ex.Message}");
         }
     }
 

@@ -1,0 +1,64 @@
+version: '3.9'
+name: pca-project
+services:
+    pca-mssql-server:
+        image: mcr.microsoft.com/mssql/server:latest
+        container_name: pca-mssql-server
+        hostname: pca-mssql-server
+        restart: always
+        user: root
+        environment:
+            - ACCEPT_EULA=Y
+            - MSSQL_SA_PASSWORD=qXz999W7M#
+            - MSSQL_PID=Express
+            - MSSQL_DB_NAME=master
+        ports:
+            - "1433:1433"
+        volumes:
+            - ./mssql/data:/var/opt/mssql/data
+            - ./mssql/logs:/var/opt/mssql/log
+            - ./mssql/secrets:/var/opt/mssql/secrets
+            - /etc/timezone:/etc/timezone:ro
+            - /etc/localtime:/etc/localtime:ro
+        healthcheck:
+            test: ["CMD", "/opt/mssql-tools/bin/sqlcmd", "-S", "localhost", "-U", "sa", "-P", "qXz999W7M#", "-Q", "SELECT 1"]
+            interval: 30s
+            timeout: 10s
+            retries: 5
+
+    pca.api:
+        image: ${DOCKER_REGISTRY-}pcaapi
+        build:
+            context: .
+            dockerfile: PCA.API/Dockerfile
+        container_name: pca.api
+        hostname: pca.api
+        restart: always
+        environment:
+            - ASPNETCORE_ENVIRONMENT=Production
+            - ASPNETCORE_URLS=http://+:80
+        volumes:
+            - /etc/timezone:/etc/timezone:ro
+            - /etc/localtime:/etc/localtime:ro
+            # - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
+            # - ${APPDATA}/ASP.NET/Https:/home/app/.aspnet/https:ro 
+        ports:
+            - "8888:80"      
+        healthcheck:
+            test: ["CMD-SHELL", "curl -i http://localhost:80/swagger/index.html || exit 1"]
+            interval: 30s
+            timeout: 15s
+            retries: 5
+            start_period: 30s
+        depends_on: 
+            pca-mssql-server:
+                condition: service_healthy
+
+networks:
+    default:
+        name: pca-network
+
+volumes:
+    pca-mssql-data:
+        name: mssql
+        external: true

@@ -16,3 +16,4 @@ global using PCA.Core.Extensions;
 global using PCA.Core.Interfaces;
 global using PCA.Core.Interfaces.Services;
 global using PCA.Core.Models;
+global using System.ComponentModel.DataAnnotations;
