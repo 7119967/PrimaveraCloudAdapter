@@ -1,4 +1,4 @@
-namespace PCA.Configurations.DI;
+namespace PCA.Configurations.DependencyInjection;
 
 public static class ServiceCollectionExtensions
 {
@@ -39,6 +39,8 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<ServicesMappingProfile>();
         services.AddHttpContextAccessor();
         
+        services.AddHealthChecks();
+        
         try
         {
             IsInitializedDatabase(serviceProvider, logger);
@@ -49,11 +51,11 @@ public static class ServiceCollectionExtensions
         }
     }
 
-    private static string GetDbConnection(IConfiguration configuration, IHostEnvironment env)
+    private static string? GetDbConnection(IConfiguration configuration, IHostEnvironment env)
     {
-        return (env.IsDevelopment()
+        return env.IsDevelopment()
             ? configuration.GetConnectionString("LocalConnection")
-            : configuration.GetConnectionString("ServerConnection"))!;
+            : configuration.GetConnectionString("ServerConnection");
     }
 
     private static void IsInitializedDatabase(IServiceProvider sp, ILogger? logger)

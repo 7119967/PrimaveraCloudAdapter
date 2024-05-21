@@ -30,3 +30,5 @@ global using PCA.Core.Utils;
 global using PCA.Infrastructure.Context;
 global using PCA.Infrastructure.Services.HttpClients;
 global using PCA.Infrastructure.Services.WebSocket;
+global using Microsoft.Extensions.Options;
+global using Microsoft.Extensions.Diagnostics.HealthChecks;

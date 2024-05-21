@@ -1,5 +1,10 @@
+using HealthChecks.UI.Configuration;
+
 namespace PCA.API;
 
+/// <summary>
+/// 
+/// </summary>
 public class Program
 {
     public static void Main(string[] args)
@@ -15,6 +20,7 @@ public class Program
         builder.Services.AddSwaggerGen();
         
         builder.Services.ConfigureBusinessServices();
+        builder.Services.ConfigureHealthChecks();
 
         var app = builder.Build();
 
@@ -31,7 +37,19 @@ public class Program
 
         app.MapControllers();
         // app.UseMiddleware<ExceptionHandlerMiddleware>();
+        
+        app.MapHealthChecks("/api/health", new HealthCheckOptions()
+        {
+            Predicate = _ => true,
+            ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
+        });
+        app.UseHealthChecksUI(delegate (Options options) 
+        {
+            options.UIPath = "/healthcheck-ui";
+            // options.AddCustomStylesheet("./HealthCheckRemote/Custom.css");
 
+        });
+        
         app.Run();
     }
 }
