@@ -21,3 +21,4 @@ global using HealthChecks.UI.Client;
 global using Microsoft.AspNetCore.Mvc;
 global using Microsoft.Extensions.Diagnostics.HealthChecks;
 global using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+global using HealthChecks.UI.Configuration;

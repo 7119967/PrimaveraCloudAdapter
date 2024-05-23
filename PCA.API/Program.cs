@@ -1,5 +1,3 @@
-using HealthChecks.UI.Configuration;
-
 namespace PCA.API;
 
 /// <summary>
@@ -38,16 +36,21 @@ public class Program
         app.MapControllers();
         // app.UseMiddleware<ExceptionHandlerMiddleware>();
         
-        app.MapHealthChecks("/api/health", new HealthCheckOptions()
+        app.MapHealthChecks("/api/health", new HealthCheckOptions
         {
             Predicate = _ => true,
             ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
         });
-        app.UseHealthChecksUI(delegate (Options options) 
+        // app.UseHealthChecksUI(delegate (Options options) 
+        // {
+        //     options.UIPath = "/healthcheck-ui";
+        //     // options.AddCustomStylesheet("./HealthCheckRemote/Custom.css");
+        //
+        // });
+                
+        app.UseHealthChecksUI(options =>
         {
-            options.UIPath = "/healthcheck-ui";
-            // options.AddCustomStylesheet("./HealthCheckRemote/Custom.css");
-
+            options.UIPath = "/healthchecks-ui";
         });
         
         app.Run();

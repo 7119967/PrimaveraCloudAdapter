@@ -18,19 +18,44 @@ public class HealthCheckController : ControllerBase
         _httpContextAccessor = httpContextAccessor;
     }
 
-    [HttpGet("healthcheck/ready")]
-    public async Task<ActionResult<string>> HealthCheckReady()
+    [HttpGet("/ready")]
+    public async Task<IActionResult> GetHealth()
     {
-        var result = await HealthCheckResult();
-        return Content(result, "application/json");
-    }
+        var healthReport = await _healthCheckService.CheckHealthAsync();
 
-    [HttpGet("healthcheck/live")]
-    public async Task<ActionResult<string>> HealthCheckLive()
+        return new JsonResult(new
+        {
+            status = healthReport.Status.ToString(),
+            results = healthReport.Entries.Select(e => new
+            {
+                key = e.Key,
+                status = e.Value.Status.ToString(),
+                description = e.Value.Description,
+                data = e.Value.Data
+            })
+        });
+    } 
+    
+    [HttpGet("/health-ui")]
+    public IActionResult HealthUI()
     {
-        var result = await Task.Run(HealthCheckResultUi);
-        return Content(result, "application/json");
-    }
+        // This will serve the HealthChecks UI from a different endpoint.
+        return new RedirectResult("/healthchecks-ui");
+    }   
+    
+    // [HttpGet("healthcheck/ready")]
+    // public async Task<ActionResult<string>> HealthCheckReady()
+    // {
+    //     var result = await HealthCheckResult();
+    //     return Content(result, "application/json");
+    // }
+    //
+    // [HttpGet("healthcheck/live")]
+    // public async Task<ActionResult<string>> HealthCheckLive()
+    // {
+    //     var result = await Task.Run(HealthCheckResultUi);
+    //     return Content(result, "application/json");
+    // }
 
     private async Task<string> HealthCheckResult()
     {

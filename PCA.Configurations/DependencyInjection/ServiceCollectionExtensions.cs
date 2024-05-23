@@ -39,8 +39,6 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<ServicesMappingProfile>();
         services.AddHttpContextAccessor();
         
-        services.AddHealthChecks();
-        
         try
         {
             IsInitializedDatabase(serviceProvider, logger);

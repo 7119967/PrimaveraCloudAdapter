@@ -78,7 +78,8 @@ public static class HealthCheckExtensions
         var env = serviceProvider.GetRequiredService<IHostEnvironment>();
         var connection = GetDbConnection(configuration!, env);
         var baseUrl = GetApplicationUrl(env);
-            
+        
+        // services.Configure<HealthChecksUIOptions>(configuration.GetSection("HealthChecksUI"));
         services.AddHealthChecks()
             .AddSqlServer(connection!, 
                 healthQuery: "select 1", 
@@ -106,7 +107,7 @@ public static class HealthCheckExtensions
                 opt.SetEvaluationTimeInSeconds(10); //time in seconds between check    
                 opt.MaximumHistoryEntriesPerEndpoint(60); //maximum history of checks    
                 opt.SetApiMaxActiveRequests(1); //api requests concurrency    
-                opt.AddHealthCheckEndpoint("feedback api", "/api/health"); //map health check api    
+                // opt.AddHealthCheckEndpoint("feedback api", "/api/health"); //map health check api    
 
             })
             .AddInMemoryStorage();
