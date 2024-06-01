@@ -20,7 +20,7 @@ public class ApiEventProducer : IApiProducer
         _webSocketClient = new WebSocketClient(services);
         var apiHttpClient = new ApiHttpClient(services);
         var authTokenResponse = apiHttpClient.GetAuthTokenDetails();
-        _webSocketClient.SetCredentials(authTokenResponse);
+        _webSocketClient.SetCredentials(authTokenResponse!);
     }
     
     public async Task<string> SendAsync(string message)

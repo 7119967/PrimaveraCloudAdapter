@@ -2,12 +2,10 @@ namespace PCA.Infrastructure.Services.HttpClients;
 
 public class ApiClientRelationship(IServiceCollection services) : BaseHttpClient<ApiClientRelationship>(services)
 {
-    public override async Task GetDataAsync(EventNotification eventNotification, dynamic json)
+    public override async Task GetDataAsync(Transaction transaction, dynamic json)
     {
-        _eventNotification = eventNotification;
         var apiEntity = JsonConvert.DeserializeObject<ApiEntityRelationshipView>(json);
         var requestUri = $"/api/restapi/relationship/{apiEntity!.PrimaryKey}";
-
         var response = await _httpClient.SendRequestAsync(requestUri);
 
         if (response == null)
@@ -18,17 +16,17 @@ public class ApiClientRelationship(IServiceCollection services) : BaseHttpClient
 
         var jsonString = await response.Content.ReadAsStringAsync();
         var data = JsonConvert.DeserializeObject(jsonString);
-        await SaveData(data!);
+        await SaveData(transaction, data!);
     }
 
-    protected override async Task InsertEntity(string eventDetails)
+    protected override async Task InsertEntity(Transaction transaction, string eventDetails)
     {
         var entity = new ActivityRelationship
         {
-            EventId = _eventNotification!.Id,
+            TransactionId = transaction!.Id,
             Json = eventDetails
         };
         
-        await _unitOfWork.ActivityRelationshipRepository.Insert(entity, new CancellationToken());
+        var entry = await _unitOfWork.ActivityRelationshipRepository.Insert(entity, new CancellationToken());
     }
 }

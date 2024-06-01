@@ -36,7 +36,7 @@ public class HealthCheckMemory : IHealthCheck
 
     public class MemoryCheckOptions
     {
-        public string Memorystatus { get; set; }
+        public string? Memorystatus { get; set; }
 
         //public int Threshold { get; set; }
         // Failure threshold (in bytes)

@@ -16,13 +16,13 @@ public abstract class BaseHttpClient<T> : IHttpClientStrategy<HttpResponseMessag
         _logger = scope.ServiceProvider.GetRequiredService<ILogger<T>>();
     }
 
-    public abstract Task GetDataAsync(EventNotification eventNotification, dynamic json);
+    public abstract Task GetDataAsync(Transaction transaction, dynamic json);
 
-    protected async Task SaveData(dynamic message)
+    protected async Task SaveData(Transaction transaction, dynamic message)
     {
         var eventDetails = JsonConvert.SerializeObject(message, Formatting.Indented);
-        await InsertEntity(eventDetails);
+        await InsertEntity(transaction, eventDetails);
     }
 
-    protected abstract Task InsertEntity(string eventDetails);
+    protected abstract Task InsertEntity(Transaction transaction, string eventDetails);
 }

@@ -16,7 +16,7 @@ public class ApiEventConsumer : BackgroundService, IApiConsumer
         _webSocketClient = new WebSocketClient(services);
         var apiHttpClient = new ApiHttpClient(services);
         var authTokenResponse = apiHttpClient.GetAuthTokenDetails();
-        _webSocketClient.SetCredentials(authTokenResponse);
+        _webSocketClient.SetCredentials(authTokenResponse!);
     }
     
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
