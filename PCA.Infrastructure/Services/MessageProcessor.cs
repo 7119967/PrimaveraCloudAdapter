@@ -39,12 +39,12 @@ public class MessageProcessor : IMessageProcessor
             _logger.LogInformation($"New message received from Primavera Cloud is:\n {JsonConvert.SerializeObject(message, Formatting.Indented)}");
             var obj = JsonConvert.DeserializeObject<ApiEntitySubscriptionView>(json);
 
-            if (_entityObjectTypeToApiClientTypeMap.TryGetValue(obj.EntityObjectType!, out var apiClientType))
+            if (_entityObjectTypeToApiClientTypeMap.TryGetValue(obj!.EntityObjectType!, out var apiClientType))
             {
                 var method = typeof(MessageProcessor)
                     .GetMethod("ProcessApiEntity", BindingFlags.NonPublic | BindingFlags.Instance)!
                     .MakeGenericMethod(apiClientType);
-                var task = (Task)method.Invoke(this, new object[] { obj, message! })!;
+                var task = (Task)method.Invoke(this, new object[] { obj, message! });
                 await task;
             }
             else
@@ -61,21 +61,22 @@ public class MessageProcessor : IMessageProcessor
 
     private async Task<EventNotification?> GetEventNotification(ApiEntitySubscriptionView obj)
     {
-        var existEventNotification = await _unitOfWork.EventNotificationRepository.GetTracking()
-            .FirstOrDefaultAsync(e => e.EntityObjectType!.Contains(obj.EntityObjectType!) && e.MessageType == "SUCCESS");
+        var existEventNotification = await _unitOfWork.EventNotificationRepository.GetNoTracking()
+            .FirstOrDefaultAsync(e => e.EntityObjectType!
+                .Contains(obj.EntityObjectType!) && e.MessageType == "SUCCESS");
 
         return existEventNotification;
     }
 
-    private Subscription? GetSubscription(ApiEntitySubscriptionView obj)
+    private async Task<Subscription?> GetSubscription(ApiEntitySubscriptionView obj)
     {
-        var subscription = _unitOfWork.SubscriptionRepository.GetTracking()
-            .FirstOrDefault(e => e.EntityObjectType!.Contains(obj.EntityObjectType!));
+        var subscription = await _unitOfWork.SubscriptionRepository.GetNoTracking()
+            .FirstOrDefaultAsync(e => e.EntityObjectType!.Contains(obj.EntityObjectType!));
         
         if (subscription is null && obj.EntityObjectType == "ApiEntityProjectBudget")
         {
-            subscription = _unitOfWork.SubscriptionRepository.GetNoTracking()
-                .FirstOrDefault(e => e.EntityObjectType!.Contains("ApiEntityProject"));
+            subscription = await _unitOfWork.SubscriptionRepository.GetNoTracking()
+                .FirstOrDefaultAsync(e => e.EntityObjectType!.Contains("ApiEntityProject"));
         }
         
         return subscription;
@@ -83,7 +84,7 @@ public class MessageProcessor : IMessageProcessor
 
     private async Task<EventNotification> SaveEventNotification(ApiEntitySubscriptionView obj)
     {
-        var subscription = GetSubscription(obj);
+        var subscription = await GetSubscription(obj);
         var eventTypeList = new List<string> { obj.EntityEventType! };
         var eventNotification = new EventNotification
         {
@@ -100,12 +101,11 @@ public class MessageProcessor : IMessageProcessor
         {
             if (existEventNotification.EntityEventType.Contains(obj.EntityEventType!)) { return existEventNotification; }
             existEventNotification.EntityEventType.Add(obj.EntityEventType!);
-            var updated = _unitOfWork.EventNotificationRepository.Update(existEventNotification, new CancellationToken()).Result;
+            var updated = await _unitOfWork.EventNotificationRepository.Update(existEventNotification, new CancellationToken());
             return (updated as InsertedEvent<EventNotification>)?.Object!;
         }
 
         var entry = await _unitOfWork.EventNotificationRepository.Insert(eventNotification, new CancellationToken());
-
         return (entry as InsertedEvent<EventNotification>)?.Object!;
     }
 
@@ -122,7 +122,6 @@ public class MessageProcessor : IMessageProcessor
         };
 
         var entry = await _unitOfWork.TransactionRepository.Insert(entity, new CancellationToken());
-
         return (entry as InsertedEvent<Transaction>)?.Object!;
     }
 

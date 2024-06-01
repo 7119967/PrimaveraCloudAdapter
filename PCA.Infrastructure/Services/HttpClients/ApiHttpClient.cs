@@ -70,7 +70,7 @@ public class ApiHttpClient
         HttpResponseMessage response;
         var fullUrl = new Uri(_url + queryParams);
         var request = new HttpRequestMessage(HttpMethod.Get, fullUrl);
-        var authTokenResponse = GetAuthTokenDetails();
+        var authTokenResponse = await GetAuthTokenDetails();
         SetCredentials(authTokenResponse!);
         request.Content = new StringContent("", Encoding.UTF8, "application/json");
 
@@ -109,15 +109,15 @@ public class ApiHttpClient
         }
     }
     
-    public Dictionary<string, object>? GetAuthTokenDetails()
+    public async Task<Dictionary<string, object>?> GetAuthTokenDetails()
     {
         var requestUri = $"https://{HOST_NAME}/primediscovery/apitoken/request?scope=http://{HOST_NAME}/api";
-        var response = SendRequestAsync(requestUri).Result;
+        var response = await SendRequestAsync(requestUri);
         if (response == null) return null;
 
-        var jsonString = response.Content.ReadAsStringAsync().Result;
+        var jsonString = await response.Content.ReadAsStringAsync();
         var dataList = JsonConvert.DeserializeObject<Dictionary<string, object>>(jsonString);
-        return dataList!;
+        return dataList;
     }
     
     private async Task<HttpResponseMessage?> SendRequestAsync(string requestUri)
@@ -125,8 +125,7 @@ public class ApiHttpClient
         var request = new HttpRequestMessage(HttpMethod.Post, requestUri);
         var credentials = $"{USER_NAME}:{PASSWORD}";
         var credentialsBase64 = Convert.ToBase64String(Encoding.ASCII.GetBytes(credentials));
-        _httpClient.DefaultRequestHeaders.Authorization = 
-            new AuthenticationHeaderValue("Basic", credentialsBase64);
+        _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", credentialsBase64);
         try
         {
             var response = await _httpClient.SendAsync(request);
@@ -140,12 +139,12 @@ public class ApiHttpClient
         }
         catch (Exception ex) when (ex is NullReferenceException or HttpRequestException)
         {
-            await Console.Out.WriteLineAsync(ex.Message);
+            _logger.LogDebug(ex.Message);
             return null;
         }
         catch (Exception ex)
         {
-            await Console.Out.WriteLineAsync(ex.Message);
+            _logger.LogDebug(ex.Message);
             throw;
         }
     }

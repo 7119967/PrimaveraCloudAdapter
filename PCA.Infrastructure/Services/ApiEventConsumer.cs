@@ -15,7 +15,7 @@ public class ApiEventConsumer : BackgroundService, IApiConsumer
         HOST_NAME = configuration["PrimaveraCloudApi:HostName"]!;
         _webSocketClient = new WebSocketClient(services);
         var apiHttpClient = new ApiHttpClient(services);
-        var authTokenResponse = apiHttpClient.GetAuthTokenDetails();
+        var authTokenResponse = apiHttpClient.GetAuthTokenDetails().Result;
         _webSocketClient.SetCredentials(authTokenResponse!);
     }
     

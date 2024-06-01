@@ -2,18 +2,17 @@ namespace PCA.Infrastructure.Services.HttpClients;
 
 public abstract class BaseHttpClient<T> : IHttpClientStrategy<HttpResponseMessage>
 {
-    protected EventNotification? _eventNotification;
-    protected readonly ApiHttpClient _httpClient;
-    protected readonly ILogger<T> _logger;
-    protected readonly IUnitOfWork _unitOfWork;
+    protected readonly ILogger<T> Logger;
+    protected readonly IUnitOfWork UnitOfWork;
+    protected readonly ApiHttpClient HttpClient;
 
     protected BaseHttpClient(IServiceCollection services)
     {
         var serviceProvider = services.BuildServiceProvider();
         var scope = serviceProvider.CreateScope();
-        _httpClient = new ApiHttpClient(services);
-        _unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
-        _logger = scope.ServiceProvider.GetRequiredService<ILogger<T>>();
+        HttpClient = new ApiHttpClient(services);
+        UnitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
+        Logger = scope.ServiceProvider.GetRequiredService<ILogger<T>>();
     }
 
     public abstract Task GetDataAsync(Transaction transaction, dynamic json);

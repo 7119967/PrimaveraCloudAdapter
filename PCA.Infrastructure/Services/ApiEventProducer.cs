@@ -19,7 +19,7 @@ public class ApiEventProducer : IApiProducer
         HOST_NAME = configuration["PrimaveraCloudApi:HostName"]!;
         _webSocketClient = new WebSocketClient(services);
         var apiHttpClient = new ApiHttpClient(services);
-        var authTokenResponse = apiHttpClient.GetAuthTokenDetails();
+        var authTokenResponse = apiHttpClient.GetAuthTokenDetails().Result;
         _webSocketClient.SetCredentials(authTokenResponse!);
     }
     
@@ -61,16 +61,16 @@ public class ApiEventProducer : IApiProducer
             throw new InvalidOperationException("Error deserializing model to Subscription", ex);
         }
         
-        var result = _unitOfWork.SubscriptionRepository.GetTracking()
-            .FirstOrDefault(e => e.EntityObjectType == entity.EntityObjectType);
+        var result = await _unitOfWork.SubscriptionRepository.GetNoTracking()
+            .FirstOrDefaultAsync(e => e.EntityObjectType == entity.EntityObjectType, ctn);
        
         if (result != null)
         {
-            await _unitOfWork.SubscriptionRepository.Update(result, ctn);
-            return $"Subscription {result.EntityObjectType} was sent and updated successfully";
+            var updated = await _unitOfWork.SubscriptionRepository.Update(result, ctn);
+            return $"Subscription {(updated as InsertedEvent<Subscription>)?.Object.EntityObjectType} was sent and updated successfully";
         }
 
-        await _unitOfWork.SubscriptionRepository.Insert(entity, ctn);
-        return $"Subscription {entity.EntityObjectType} was sent and created successfully";
+        var created =await _unitOfWork.SubscriptionRepository.Insert(entity, ctn);
+        return $"Subscription {(created as InsertedEvent<Subscription>)?.Object.EntityObjectType} was sent and created successfully";
     }
 }

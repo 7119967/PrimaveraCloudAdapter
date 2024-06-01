@@ -40,7 +40,10 @@ public class GenericRepository<T> : IGenericRepository<T> where T : class
         return result;
     }
 
-    public virtual IQueryable<T> GetNoTracking(Expression<Func<T, bool>>? filter = null, Func<IQueryable<T>, IOrderedQueryable<T>>? orderBy = null, string includeProperties = "")
+    public virtual IQueryable<T> GetNoTracking(
+        Expression<Func<T, bool>>? filter = null, 
+        Func<IQueryable<T>, IOrderedQueryable<T>>? orderBy = null, 
+        string includeProperties = "")
     {
         IQueryable<T> source = Set;
         if (filter != null)
@@ -121,26 +124,6 @@ public class GenericRepository<T> : IGenericRepository<T> where T : class
         return (await Set.FindAsync(new object[1] { id }!, cancellationToken))!;
     }
 
-    public virtual async Task<IEvent<T>> Insert(T entity, CancellationToken cancellationToken)
-    {
-        try
-        {
-            Set.Add(entity);
-            await Context.SaveChangesAsync(cancellationToken);
-            return (IEvent<T>)(object)new InsertedEvent<T>(entity);
-        }
-        catch (Exception ex)
-        {
-            Exception exception = ex;
-            return (IEvent<T>)(object)new ExceptionEvent<T>(exception.Trace());
-        }
-    }
-
-    public Task InsertMany(T[] entities)
-    {
-        throw new NotImplementedException("InsertMany");
-    }
-
     public Task Drop()
     {
         throw new NotImplementedException("Delete");
@@ -179,7 +162,7 @@ public class GenericRepository<T> : IGenericRepository<T> where T : class
             if (Context.Entry(entityToUpdate).State == EntityState.Detached)
             {
                 Context!.ChangeTracker.Clear();
-                Set.Update(entityToUpdate);
+                await UpdateAsync(entityToUpdate);
             }
             else
             {
@@ -196,7 +179,41 @@ public class GenericRepository<T> : IGenericRepository<T> where T : class
             return (IEvent<T>)(object)new ExceptionEvent<T>(exception.Trace());
         }
     }
+    
+    private async Task UpdateAsync(T item)
+    {
+        await Task.Run(() => Set.Update(item));
+    }
 
+    public virtual async Task<IEvent<T>> Insert(T entity, CancellationToken cancellationToken)
+    {
+        try
+        {
+            if (Context.Entry(entity).State == EntityState.Detached)
+            {
+                Context!.ChangeTracker.Clear();
+                await Set.AddAsync(entity, cancellationToken);
+            }
+            else
+            {
+                await Set.AddAsync(entity, cancellationToken);
+            }
+           
+            await Context.SaveChangesAsync(cancellationToken);
+            return (IEvent<T>)(object)new InsertedEvent<T>(entity);
+        }
+        catch (Exception ex)
+        {
+            Exception exception = ex;
+            return (IEvent<T>)(object)new ExceptionEvent<T>(exception.Trace());
+        }
+    }
+
+    public Task InsertMany(T[] entities)
+    {
+        throw new NotImplementedException("InsertMany");
+    }
+    
     public async Task<long> Total(CancellationToken cancellationToken)
     {
         return await Set.CountAsync(cancellationToken);

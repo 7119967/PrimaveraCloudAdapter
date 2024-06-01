@@ -6,11 +6,11 @@ public class ApiClientRelationship(IServiceCollection services) : BaseHttpClient
     {
         var apiEntity = JsonConvert.DeserializeObject<ApiEntityRelationshipView>(json);
         var requestUri = $"/api/restapi/relationship/{apiEntity!.PrimaryKey}";
-        var response = await _httpClient.SendRequestAsync(requestUri);
+        var response = await HttpClient.SendRequestAsync(requestUri);
 
         if (response == null)
         {
-            _logger.LogDebug($"{GetType().Name} reports: The response has no required data");
+            Logger.LogDebug($"{GetType().Name} reports: The response has no required data");
             return;
         }
 
@@ -27,6 +27,6 @@ public class ApiClientRelationship(IServiceCollection services) : BaseHttpClient
             Json = eventDetails
         };
         
-        var entry = await _unitOfWork.ActivityRelationshipRepository.Insert(entity, new CancellationToken());
+        var entry = await UnitOfWork.ActivityRelationshipRepository.Insert(entity, new CancellationToken());
     }
 }

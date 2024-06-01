@@ -6,11 +6,11 @@ public class ApiClientAssignment(IServiceCollection services) : BaseHttpClient<A
     {
         var apiEntity = JsonConvert.DeserializeObject<ApiEntityResourceAssignmentView>(json);
         var requestUri = $"/api/restapi/assignment/{apiEntity!.PrimaryKey}";
-        var response = await _httpClient.SendRequestAsync(requestUri);
+        var response = await HttpClient.SendRequestAsync(requestUri);
 
         if (response == null)
         {
-            _logger.LogDebug($"{GetType().Name} reports: The response has no required data");
+            Logger.LogDebug($"{GetType().Name} reports: The response has no required data");
             return;
         }
 
@@ -27,6 +27,6 @@ public class ApiClientAssignment(IServiceCollection services) : BaseHttpClient<A
             Json = eventDetails
         };
         
-        var entry = await _unitOfWork.ResourceAssignmentRepository.Insert(entity, new CancellationToken());
+        var entry = await UnitOfWork.ResourceAssignmentRepository.Insert(entity, new CancellationToken());
     }
 }
