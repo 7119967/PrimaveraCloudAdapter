@@ -3,13 +3,13 @@ namespace PCA.Core.Models;
 public class ApiEntityProjectView
 {
     [JsonProperty("messageType")] 
-    public string MessageType { get; set; }
+    public string? MessageType { get; set; }
 
     [JsonProperty("code")] 
-    public string Code { get; set; }
+    public string? Code { get; set; }
 
     [JsonProperty("eventType")] 
-    public string EventType { get; set; }
+    public string? EventType { get; set; }
 
     [JsonProperty("primaryKey")] 
     public int? PrimaryKey { get; set; }
@@ -18,13 +18,13 @@ public class ApiEntityProjectView
     public int? WorkspaceId { get; set; }
 
     [JsonProperty("workspaceCode")] 
-    public string WorkspaceCode { get; set; }
+    public string? WorkspaceCode { get; set; }
 
     [JsonProperty("entityObjectType")] 
-    public string EntityObjectType { get; set; }
+    public string? EntityObjectType { get; set; }
 
     [JsonProperty("updatedFields")] 
-    public UpdatedFields UpdatedFields { get; set; }
+    public UpdatedFields? UpdatedFields { get; set; }
 }
 
 public class UpdatedFields

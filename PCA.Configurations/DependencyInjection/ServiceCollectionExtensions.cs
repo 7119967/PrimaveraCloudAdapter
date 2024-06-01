@@ -5,11 +5,9 @@ public static class ServiceCollectionExtensions
     public static void ConfigureBusinessServices(this IServiceCollection services)
     {
         var serviceProvider = services.BuildServiceProvider(true);
-        var scope = serviceProvider.GetService<IServiceScopeFactory>()!.CreateScope();
         var env = serviceProvider.GetRequiredService<IHostEnvironment>();
         var configuration = serviceProvider.GetRequiredService<IConfiguration>();
         var logger = serviceProvider.GetService<ILogger>();
-        // var scope = serviceProvider.CreateScope();
 
         Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
         Console.OutputEncoding = Encoding.UTF8;
@@ -30,12 +28,12 @@ public static class ServiceCollectionExtensions
 
         services.AddAutoMapper(Assembly.GetExecutingAssembly());
         services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
-        services.AddScoped<IUnitOfWork, UnitOfWork>();
+        services.AddTransient<IUnitOfWork, UnitOfWork>();
         services.AddTransient<IWebSocketClient>(_ => new WebSocketClient(services));     
         services.AddTransient<ApiHttpClient>(_ => new ApiHttpClient(services));
-        services.AddSingleton<IApiProducer, ApiEventProducer>(_ => new ApiEventProducer(services));
+        services.AddTransient<IApiProducer, ApiEventProducer>(_ => new ApiEventProducer(services));
         services.AddHostedService<ApiEventConsumer>(_ => new ApiEventConsumer(services));
-        services.AddSingleton<IMessageProcessor, MessageProcessor>(_ => new MessageProcessor(services));
+        services.AddTransient<IMessageProcessor, MessageProcessor>(_ => new MessageProcessor(services));
         services.AddSingleton<ServicesMappingProfile>();
         services.AddHttpContextAccessor();
         

@@ -12,8 +12,8 @@ using PCA.Infrastructure.Context;
 namespace PCA.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20240508161525_AddProjectBudget")]
-    partial class AddProjectBudget
+    [Migration("20240601133021_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -39,19 +39,18 @@ namespace PCA.Infrastructure.Migrations
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("datetimeoffset");
 
-                    b.Property<long>("EventId")
-                        .HasColumnType("bigint");
-
                     b.Property<string>("Json")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<long>("TransactionId")
+                        .HasColumnType("bigint");
 
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .HasColumnType("datetimeoffset");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("EventId");
+                    b.HasIndex("TransactionId");
 
                     b.ToTable("Activities");
                 });
@@ -67,19 +66,18 @@ namespace PCA.Infrastructure.Migrations
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("datetimeoffset");
 
-                    b.Property<long>("EventId")
-                        .HasColumnType("bigint");
-
                     b.Property<string>("Json")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<long>("TransactionId")
+                        .HasColumnType("bigint");
 
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .HasColumnType("datetimeoffset");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("EventId");
+                    b.HasIndex("TransactionId");
 
                     b.ToTable("ActivityRelationships");
                 });
@@ -95,19 +93,18 @@ namespace PCA.Infrastructure.Migrations
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("datetimeoffset");
 
-                    b.Property<long>("EventId")
-                        .HasColumnType("bigint");
-
                     b.Property<string>("Json")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<long>("TransactionId")
+                        .HasColumnType("bigint");
 
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .HasColumnType("datetimeoffset");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("EventId");
+                    b.HasIndex("TransactionId");
 
                     b.ToTable("CalendarChanges");
                 });
@@ -134,11 +131,9 @@ namespace PCA.Infrastructure.Migrations
                         .HasColumnType("bit");
 
                     b.Property<string>("Message")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("MessageType")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<long>("SubscriptionId")
@@ -187,19 +182,18 @@ namespace PCA.Infrastructure.Migrations
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("datetimeoffset");
 
-                    b.Property<long>("EventId")
-                        .HasColumnType("bigint");
-
                     b.Property<string>("Json")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<long>("TransactionId")
+                        .HasColumnType("bigint");
 
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .HasColumnType("datetimeoffset");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("EventId");
+                    b.HasIndex("TransactionId");
 
                     b.ToTable("Projects");
                 });
@@ -215,19 +209,18 @@ namespace PCA.Infrastructure.Migrations
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("datetimeoffset");
 
-                    b.Property<long>("EventId")
-                        .HasColumnType("bigint");
-
                     b.Property<string>("Json")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<long>("TransactionId")
+                        .HasColumnType("bigint");
 
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .HasColumnType("datetimeoffset");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("EventId");
+                    b.HasIndex("TransactionId");
 
                     b.ToTable("ProjectBudgets");
                 });
@@ -243,19 +236,18 @@ namespace PCA.Infrastructure.Migrations
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("datetimeoffset");
 
-                    b.Property<long>("EventId")
-                        .HasColumnType("bigint");
-
                     b.Property<string>("Json")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<long>("TransactionId")
+                        .HasColumnType("bigint");
 
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .HasColumnType("datetimeoffset");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("EventId");
+                    b.HasIndex("TransactionId");
 
                     b.ToTable("Resources");
                 });
@@ -271,19 +263,18 @@ namespace PCA.Infrastructure.Migrations
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("datetimeoffset");
 
-                    b.Property<long>("EventId")
-                        .HasColumnType("bigint");
-
                     b.Property<string>("Json")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<long>("TransactionId")
+                        .HasColumnType("bigint");
 
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .HasColumnType("datetimeoffset");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("EventId");
+                    b.HasIndex("TransactionId");
 
                     b.ToTable("ResourceAssignments");
                 });
@@ -332,7 +323,6 @@ namespace PCA.Infrastructure.Migrations
                         .HasColumnType("datetimeoffset");
 
                     b.Property<string>("EventDetails")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<long>("EventId")
@@ -342,15 +332,12 @@ namespace PCA.Infrastructure.Migrations
                         .HasColumnType("datetimeoffset");
 
                     b.Property<string>("EventType")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("InitiatingUser")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("SystemOrigin")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTimeOffset>("UpdatedAt")
@@ -374,54 +361,53 @@ namespace PCA.Infrastructure.Migrations
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("datetimeoffset");
 
-                    b.Property<long>("EventId")
-                        .HasColumnType("bigint");
-
                     b.Property<string>("Json")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<long>("TransactionId")
+                        .HasColumnType("bigint");
 
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .HasColumnType("datetimeoffset");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("EventId");
+                    b.HasIndex("TransactionId");
 
                     b.ToTable("Wbs");
                 });
 
             modelBuilder.Entity("PCA.Core.Entities.Activity", b =>
                 {
-                    b.HasOne("PCA.Core.Entities.EventNotification", "Event")
-                        .WithMany()
-                        .HasForeignKey("EventId")
+                    b.HasOne("PCA.Core.Entities.Transaction", "Transaction")
+                        .WithMany("Activities")
+                        .HasForeignKey("TransactionId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Event");
+                    b.Navigation("Transaction");
                 });
 
             modelBuilder.Entity("PCA.Core.Entities.ActivityRelationship", b =>
                 {
-                    b.HasOne("PCA.Core.Entities.EventNotification", "Event")
-                        .WithMany()
-                        .HasForeignKey("EventId")
+                    b.HasOne("PCA.Core.Entities.Transaction", "Transaction")
+                        .WithMany("ActivityRelationships")
+                        .HasForeignKey("TransactionId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Event");
+                    b.Navigation("Transaction");
                 });
 
             modelBuilder.Entity("PCA.Core.Entities.CalendarChange", b =>
                 {
-                    b.HasOne("PCA.Core.Entities.EventNotification", "Event")
-                        .WithMany()
-                        .HasForeignKey("EventId")
+                    b.HasOne("PCA.Core.Entities.Transaction", "Transaction")
+                        .WithMany("CalendarChanges")
+                        .HasForeignKey("TransactionId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Event");
+                    b.Navigation("Transaction");
                 });
 
             modelBuilder.Entity("PCA.Core.Entities.EventNotification", b =>
@@ -437,46 +423,46 @@ namespace PCA.Infrastructure.Migrations
 
             modelBuilder.Entity("PCA.Core.Entities.Project", b =>
                 {
-                    b.HasOne("PCA.Core.Entities.EventNotification", "Event")
-                        .WithMany()
-                        .HasForeignKey("EventId")
+                    b.HasOne("PCA.Core.Entities.Transaction", "Transaction")
+                        .WithMany("Projects")
+                        .HasForeignKey("TransactionId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Event");
+                    b.Navigation("Transaction");
                 });
 
             modelBuilder.Entity("PCA.Core.Entities.ProjectBudget", b =>
                 {
-                    b.HasOne("PCA.Core.Entities.EventNotification", "Event")
-                        .WithMany()
-                        .HasForeignKey("EventId")
+                    b.HasOne("PCA.Core.Entities.Transaction", "Transaction")
+                        .WithMany("ProjectBudgets")
+                        .HasForeignKey("TransactionId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Event");
+                    b.Navigation("Transaction");
                 });
 
             modelBuilder.Entity("PCA.Core.Entities.Resource", b =>
                 {
-                    b.HasOne("PCA.Core.Entities.EventNotification", "Event")
-                        .WithMany()
-                        .HasForeignKey("EventId")
+                    b.HasOne("PCA.Core.Entities.Transaction", "Transaction")
+                        .WithMany("Resources")
+                        .HasForeignKey("TransactionId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Event");
+                    b.Navigation("Transaction");
                 });
 
             modelBuilder.Entity("PCA.Core.Entities.ResourceAssignment", b =>
                 {
-                    b.HasOne("PCA.Core.Entities.EventNotification", "Event")
-                        .WithMany()
-                        .HasForeignKey("EventId")
+                    b.HasOne("PCA.Core.Entities.Transaction", "Transaction")
+                        .WithMany("ResourceAssignments")
+                        .HasForeignKey("TransactionId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Event");
+                    b.Navigation("Transaction");
                 });
 
             modelBuilder.Entity("PCA.Core.Entities.Transaction", b =>
@@ -492,13 +478,32 @@ namespace PCA.Infrastructure.Migrations
 
             modelBuilder.Entity("PCA.Core.Entities.Wbs", b =>
                 {
-                    b.HasOne("PCA.Core.Entities.EventNotification", "Event")
-                        .WithMany()
-                        .HasForeignKey("EventId")
+                    b.HasOne("PCA.Core.Entities.Transaction", "Transaction")
+                        .WithMany("Wbses")
+                        .HasForeignKey("TransactionId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Event");
+                    b.Navigation("Transaction");
+                });
+
+            modelBuilder.Entity("PCA.Core.Entities.Transaction", b =>
+                {
+                    b.Navigation("Activities");
+
+                    b.Navigation("ActivityRelationships");
+
+                    b.Navigation("CalendarChanges");
+
+                    b.Navigation("ProjectBudgets");
+
+                    b.Navigation("Projects");
+
+                    b.Navigation("ResourceAssignments");
+
+                    b.Navigation("Resources");
+
+                    b.Navigation("Wbses");
                 });
 #pragma warning restore 612, 618
         }

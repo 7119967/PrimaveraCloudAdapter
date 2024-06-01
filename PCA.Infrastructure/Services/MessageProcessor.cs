@@ -4,7 +4,6 @@ public class MessageProcessor : IMessageProcessor
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly IServiceScope? _scope;
-    private readonly IMapper _mapper;
     private readonly IServiceCollection _services;
     private readonly IConfiguration _configuration;
     private readonly ILogger<MessageProcessor> _logger;
@@ -25,27 +24,28 @@ public class MessageProcessor : IMessageProcessor
         _services = services;
         var serviceProvider = services.BuildServiceProvider(true);
         _scope = serviceProvider.CreateScope();
-        _mapper = _scope.ServiceProvider.GetRequiredService<IMapper>();
         _unitOfWork = _scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
         _configuration = _scope.ServiceProvider.GetRequiredService<IConfiguration>();
         _logger = _scope.ServiceProvider.GetRequiredService<ILogger<MessageProcessor>>();
     }
     
-    public Task ProcessMessageAsync(string json)
+    public async Task ProcessMessageAsync(string json)
     {
         try
         {
-            if (json is null) return Task.CompletedTask;
+            if (json is null) return;
+
             var message = JsonConvert.DeserializeObject(json);
             _logger.LogInformation($"New message received from Primavera Cloud is:\n {JsonConvert.SerializeObject(message, Formatting.Indented)}");
             var obj = JsonConvert.DeserializeObject<ApiEntitySubscriptionView>(json);
 
-            if (_entityObjectTypeToApiClientTypeMap.TryGetValue(obj!.EntityObjectType, out var apiClientType))
+            if (_entityObjectTypeToApiClientTypeMap.TryGetValue(obj!.EntityObjectType!, out var apiClientType))
             {
                 var method = typeof(MessageProcessor)
                     .GetMethod("ProcessApiEntity", BindingFlags.NonPublic | BindingFlags.Instance)!
                     .MakeGenericMethod(apiClientType);
-                method.Invoke(this, new object[] { obj, message! });
+                var task = (Task)method.Invoke(this, new object[] { obj, message! });
+                await task;
             }
             else
             {
@@ -57,39 +57,37 @@ public class MessageProcessor : IMessageProcessor
             _logger.LogError($"An error occurred while processing the message: {ex.Message}");
             throw new BaseException($"An error occurred while processing the message: {ex.Message}");
         }
-
-        return Task.CompletedTask;
     }
 
-    private EventNotification? GetEventNotification(ApiEntitySubscriptionView obj)
+    private async Task<EventNotification?> GetEventNotification(ApiEntitySubscriptionView obj)
     {
-        var existEventNotification = _unitOfWork.EventNotificationRepository.GetTracking()
-            .FirstOrDefault(e => e.EntityObjectType!.Contains(obj.EntityObjectType) && e.MessageType == "SUCCESS");
+        var existEventNotification = await _unitOfWork.EventNotificationRepository.GetNoTracking()
+            .FirstOrDefaultAsync(e => e.EntityObjectType!
+                .Contains(obj.EntityObjectType!) && e.MessageType == "SUCCESS");
 
         return existEventNotification;
     }
 
-    private Subscription? GetSubscription(ApiEntitySubscriptionView obj)
+    private async Task<Subscription?> GetSubscription(ApiEntitySubscriptionView obj)
     {
-        var subscription = _unitOfWork.SubscriptionRepository.GetTracking()
-            .FirstOrDefault(e => e.EntityObjectType!.Contains(obj.EntityObjectType));
+        var subscription = await _unitOfWork.SubscriptionRepository.GetNoTracking()
+            .FirstOrDefaultAsync(e => e.EntityObjectType!.Contains(obj.EntityObjectType!));
         
         if (subscription is null && obj.EntityObjectType == "ApiEntityProjectBudget")
         {
-            subscription = _unitOfWork.SubscriptionRepository.GetNoTracking()
-                .FirstOrDefault(e => e.EntityObjectType!.Contains("ApiEntityProject"));
+            subscription = await _unitOfWork.SubscriptionRepository.GetNoTracking()
+                .FirstOrDefaultAsync(e => e.EntityObjectType!.Contains("ApiEntityProject"));
         }
         
         return subscription;
     }
 
-    private EventNotification SaveEventNotification(ApiEntitySubscriptionView obj)
+    private async Task<EventNotification> SaveEventNotification(ApiEntitySubscriptionView obj)
     {
-        var subscription = GetSubscription(obj);
-        var eventTypeList = new List<string> { obj.EntityEventType };
+        var subscription = await GetSubscription(obj);
+        var eventTypeList = new List<string> { obj.EntityEventType! };
         var eventNotification = new EventNotification
         {
-            // Subscription = subscription!,
             SubscriptionId = subscription!.Id,
             Message = obj.MessageContent,
             MessageType = obj.MessageType,
@@ -98,22 +96,20 @@ public class MessageProcessor : IMessageProcessor
             EntityEventType = eventTypeList
         };
 
-        var existEventNotification = GetEventNotification(obj);
+        var existEventNotification = await GetEventNotification(obj);
         if (existEventNotification != null) 
         {
-            if (existEventNotification.EntityEventType.Contains(obj.EntityEventType)) { return existEventNotification; }
-            existEventNotification.EntityEventType.Add(obj.EntityEventType);
-            var updated = _unitOfWork.EventNotificationRepository.Update(existEventNotification, new CancellationToken()).Result;
+            if (existEventNotification.EntityEventType.Contains(obj.EntityEventType!)) { return existEventNotification; }
+            existEventNotification.EntityEventType.Add(obj.EntityEventType!);
+            var updated = await _unitOfWork.EventNotificationRepository.Update(existEventNotification, new CancellationToken());
             return (updated as InsertedEvent<EventNotification>)?.Object!;
         }
 
-        var entity = _unitOfWork.EventNotificationRepository
-            .Insert(eventNotification, new CancellationToken()).Result;
-
-        return (entity as InsertedEvent<EventNotification>)?.Object!;
+        var entry = await _unitOfWork.EventNotificationRepository.Insert(eventNotification, new CancellationToken());
+        return (entry as InsertedEvent<EventNotification>)?.Object!;
     }
 
-    private void SaveTransaction(EventNotification eventNotification, ApiEntitySubscriptionView obj, dynamic message)
+    private async Task<Transaction> SaveTransaction(EventNotification eventNotification, ApiEntitySubscriptionView obj, dynamic message)
     {
         var entity = new Transaction
         {
@@ -124,17 +120,18 @@ public class MessageProcessor : IMessageProcessor
             SystemOrigin = _configuration.GetSection("PrimaveraCloudApi:HostName").Value!,
             InitiatingUser = _configuration.GetSection("PrimaveraCloudApi:UserName").Value!
         };
-        
-        _unitOfWork.TransactionRepository.Insert(entity, new CancellationToken());
+
+        var entry = await _unitOfWork.TransactionRepository.Insert(entity, new CancellationToken());
+        return (entry as InsertedEvent<Transaction>)?.Object!;
     }
 
-    private void CallApiClient<T>(EventNotification eventNotification, dynamic message) where T : IHttpClientStrategy<HttpResponseMessage>
+    private async Task CallApiClient<T>(Transaction transaction, dynamic message) where T : IHttpClientStrategy<HttpResponseMessage>
     {
-        var apiClientEntity = (T)Activator.CreateInstance(typeof(T), _services!)!;
-        var apiHttpClient = new ApiHttpClient(_scope!, apiClientEntity!);
+        var apiClientEntity = (T)Activator.CreateInstance(typeof(T), _services)!;
+        var apiHttpClient = new ApiHttpClient(_scope!, apiClientEntity);
         var json = JsonConvert.SerializeObject(message, Formatting.Indented);
-        _logger.LogInformation($"ExecuteRequest starts: {json}");
-        apiHttpClient.ExecuteRequests(eventNotification, json).WaitAsync(new CancellationToken());
+        _logger.LogInformation($"ExecuteRequest starts with :\n {json}");
+        await apiHttpClient.ExecuteRequests(transaction, json);
         _logger.LogInformation($"ExecuteRequest completed");
     }
     
@@ -144,18 +141,18 @@ public class MessageProcessor : IMessageProcessor
 /// <param name="obj"></param>
 /// <param name="message"></param>
 /// <typeparam name="T"></typeparam>
-    private void ProcessApiEntity<T>(ApiEntitySubscriptionView obj, dynamic message) where T : IHttpClientStrategy<HttpResponseMessage>
+    private async Task ProcessApiEntity<T>(ApiEntitySubscriptionView obj, dynamic message) where T : IHttpClientStrategy<HttpResponseMessage>
     {
         switch (obj.MessageType)
         {
             case "EVENT":
-                var eventNotification = GetEventNotification(obj);
-                SaveTransaction(eventNotification, obj, message);
-                CallApiClient<T>(eventNotification, message);
+                var eventNotification = await GetEventNotification(obj);
+                var transaction = await SaveTransaction(eventNotification, obj, message);
+                await CallApiClient<T>(transaction, message);
                 break;
             case "SUCCESS":
             case "ERROR":
-                SaveEventNotification(obj);
+                await SaveEventNotification(obj);
                 break;
         }
     }

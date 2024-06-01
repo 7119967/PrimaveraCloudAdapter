@@ -52,8 +52,8 @@ namespace PCA.Infrastructure.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     SubscriptionId = table.Column<long>(type: "bigint", nullable: false),
                     IsEnabled = table.Column<bool>(type: "bit", nullable: false),
-                    MessageType = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Message = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    MessageType = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Message = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     EntityObjectType = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     EntityEventType = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     UpdatedAt = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false),
@@ -71,149 +71,17 @@ namespace PCA.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Activities",
-                columns: table => new
-                {
-                    Id = table.Column<long>(type: "bigint", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    EventId = table.Column<long>(type: "bigint", nullable: false),
-                    Json = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    UpdatedAt = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false),
-                    CreatedAt = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Activities", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Activities_EventNotifications_EventId",
-                        column: x => x.EventId,
-                        principalTable: "EventNotifications",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "ActivityRelationships",
-                columns: table => new
-                {
-                    Id = table.Column<long>(type: "bigint", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    EventId = table.Column<long>(type: "bigint", nullable: false),
-                    Json = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    UpdatedAt = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false),
-                    CreatedAt = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_ActivityRelationships", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_ActivityRelationships_EventNotifications_EventId",
-                        column: x => x.EventId,
-                        principalTable: "EventNotifications",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "CalendarChanges",
-                columns: table => new
-                {
-                    Id = table.Column<long>(type: "bigint", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    EventId = table.Column<long>(type: "bigint", nullable: false),
-                    Json = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    UpdatedAt = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false),
-                    CreatedAt = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_CalendarChanges", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_CalendarChanges_EventNotifications_EventId",
-                        column: x => x.EventId,
-                        principalTable: "EventNotifications",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Projects",
-                columns: table => new
-                {
-                    Id = table.Column<long>(type: "bigint", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    EventId = table.Column<long>(type: "bigint", nullable: false),
-                    Json = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    UpdatedAt = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false),
-                    CreatedAt = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Projects", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Projects_EventNotifications_EventId",
-                        column: x => x.EventId,
-                        principalTable: "EventNotifications",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "ResourceAssignments",
-                columns: table => new
-                {
-                    Id = table.Column<long>(type: "bigint", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    EventId = table.Column<long>(type: "bigint", nullable: false),
-                    Json = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    UpdatedAt = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false),
-                    CreatedAt = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_ResourceAssignments", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_ResourceAssignments_EventNotifications_EventId",
-                        column: x => x.EventId,
-                        principalTable: "EventNotifications",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Resources",
-                columns: table => new
-                {
-                    Id = table.Column<long>(type: "bigint", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    EventId = table.Column<long>(type: "bigint", nullable: false),
-                    Json = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    UpdatedAt = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false),
-                    CreatedAt = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Resources", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Resources_EventNotifications_EventId",
-                        column: x => x.EventId,
-                        principalTable: "EventNotifications",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "Transactions",
                 columns: table => new
                 {
                     Id = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     EventId = table.Column<long>(type: "bigint", nullable: false),
-                    EventType = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    EventType = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     EventTimeStamp = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false),
-                    EventDetails = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    SystemOrigin = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    InitiatingUser = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    EventDetails = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    SystemOrigin = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    InitiatingUser = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     UpdatedAt = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false),
                     CreatedAt = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false)
                 },
@@ -229,13 +97,167 @@ namespace PCA.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Activities",
+                columns: table => new
+                {
+                    Id = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    TransactionId = table.Column<long>(type: "bigint", nullable: false),
+                    Json = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    UpdatedAt = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false),
+                    CreatedAt = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Activities", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Activities_Transactions_TransactionId",
+                        column: x => x.TransactionId,
+                        principalTable: "Transactions",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "ActivityRelationships",
+                columns: table => new
+                {
+                    Id = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    TransactionId = table.Column<long>(type: "bigint", nullable: false),
+                    Json = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    UpdatedAt = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false),
+                    CreatedAt = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ActivityRelationships", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_ActivityRelationships_Transactions_TransactionId",
+                        column: x => x.TransactionId,
+                        principalTable: "Transactions",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "CalendarChanges",
+                columns: table => new
+                {
+                    Id = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    TransactionId = table.Column<long>(type: "bigint", nullable: false),
+                    Json = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    UpdatedAt = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false),
+                    CreatedAt = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_CalendarChanges", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_CalendarChanges_Transactions_TransactionId",
+                        column: x => x.TransactionId,
+                        principalTable: "Transactions",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "ProjectBudgets",
+                columns: table => new
+                {
+                    Id = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    TransactionId = table.Column<long>(type: "bigint", nullable: false),
+                    Json = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    UpdatedAt = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false),
+                    CreatedAt = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ProjectBudgets", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_ProjectBudgets_Transactions_TransactionId",
+                        column: x => x.TransactionId,
+                        principalTable: "Transactions",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Projects",
+                columns: table => new
+                {
+                    Id = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    TransactionId = table.Column<long>(type: "bigint", nullable: false),
+                    Json = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    UpdatedAt = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false),
+                    CreatedAt = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Projects", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Projects_Transactions_TransactionId",
+                        column: x => x.TransactionId,
+                        principalTable: "Transactions",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "ResourceAssignments",
+                columns: table => new
+                {
+                    Id = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    TransactionId = table.Column<long>(type: "bigint", nullable: false),
+                    Json = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    UpdatedAt = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false),
+                    CreatedAt = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ResourceAssignments", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_ResourceAssignments_Transactions_TransactionId",
+                        column: x => x.TransactionId,
+                        principalTable: "Transactions",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Resources",
+                columns: table => new
+                {
+                    Id = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    TransactionId = table.Column<long>(type: "bigint", nullable: false),
+                    Json = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    UpdatedAt = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false),
+                    CreatedAt = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Resources", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Resources_Transactions_TransactionId",
+                        column: x => x.TransactionId,
+                        principalTable: "Transactions",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Wbs",
                 columns: table => new
                 {
                     Id = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    EventId = table.Column<long>(type: "bigint", nullable: false),
-                    Json = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    TransactionId = table.Column<long>(type: "bigint", nullable: false),
+                    Json = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     UpdatedAt = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false),
                     CreatedAt = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false)
                 },
@@ -243,27 +265,27 @@ namespace PCA.Infrastructure.Migrations
                 {
                     table.PrimaryKey("PK_Wbs", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Wbs_EventNotifications_EventId",
-                        column: x => x.EventId,
-                        principalTable: "EventNotifications",
+                        name: "FK_Wbs_Transactions_TransactionId",
+                        column: x => x.TransactionId,
+                        principalTable: "Transactions",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_Activities_EventId",
+                name: "IX_Activities_TransactionId",
                 table: "Activities",
-                column: "EventId");
+                column: "TransactionId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_ActivityRelationships_EventId",
+                name: "IX_ActivityRelationships_TransactionId",
                 table: "ActivityRelationships",
-                column: "EventId");
+                column: "TransactionId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_CalendarChanges_EventId",
+                name: "IX_CalendarChanges_TransactionId",
                 table: "CalendarChanges",
-                column: "EventId");
+                column: "TransactionId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_EventNotifications_SubscriptionId",
@@ -271,19 +293,24 @@ namespace PCA.Infrastructure.Migrations
                 column: "SubscriptionId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Projects_EventId",
+                name: "IX_ProjectBudgets_TransactionId",
+                table: "ProjectBudgets",
+                column: "TransactionId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Projects_TransactionId",
                 table: "Projects",
-                column: "EventId");
+                column: "TransactionId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_ResourceAssignments_EventId",
+                name: "IX_ResourceAssignments_TransactionId",
                 table: "ResourceAssignments",
-                column: "EventId");
+                column: "TransactionId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Resources_EventId",
+                name: "IX_Resources_TransactionId",
                 table: "Resources",
-                column: "EventId");
+                column: "TransactionId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Transactions_EventId",
@@ -291,9 +318,9 @@ namespace PCA.Infrastructure.Migrations
                 column: "EventId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Wbs_EventId",
+                name: "IX_Wbs_TransactionId",
                 table: "Wbs",
-                column: "EventId");
+                column: "TransactionId");
         }
 
         /// <inheritdoc />
@@ -312,6 +339,9 @@ namespace PCA.Infrastructure.Migrations
                 name: "ObjectTypes");
 
             migrationBuilder.DropTable(
+                name: "ProjectBudgets");
+
+            migrationBuilder.DropTable(
                 name: "Projects");
 
             migrationBuilder.DropTable(
@@ -321,10 +351,10 @@ namespace PCA.Infrastructure.Migrations
                 name: "Resources");
 
             migrationBuilder.DropTable(
-                name: "Transactions");
+                name: "Wbs");
 
             migrationBuilder.DropTable(
-                name: "Wbs");
+                name: "Transactions");
 
             migrationBuilder.DropTable(
                 name: "EventNotifications");

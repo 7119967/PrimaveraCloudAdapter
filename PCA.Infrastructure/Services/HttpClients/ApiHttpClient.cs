@@ -2,14 +2,14 @@ namespace PCA.Infrastructure.Services.HttpClients;
 
 public class ApiHttpClient
 {
-    private string HOST_NAME;
-    private string USER_NAME;
-    private string PASSWORD;
-    private string _url;
+    private string? _url;
+    private string? PASSWORD;
+    private string? HOST_NAME;
+    private string? USER_NAME;
+    private readonly IServiceScope? _scope;
+    private ILogger<ApiHttpClient> _logger;
     private readonly HttpClient _httpClient;
     private readonly IHttpClientStrategy<HttpResponseMessage> _httpClientStrategy;
-    private ILogger<ApiHttpClient> _logger;
-    private readonly IServiceScope _scope;
 
     public ApiHttpClient(IServiceCollection services)
     {
@@ -37,27 +37,27 @@ public class ApiHttpClient
 
     private void Initiate(IServiceScope scope)
     {
-        var configuration = scope.ServiceProvider.GetRequiredService<IConfiguration>();
         _logger = scope.ServiceProvider.GetRequiredService<ILogger<ApiHttpClient>>();
+        var configuration = scope.ServiceProvider.GetRequiredService<IConfiguration>();
         _url = GetBaseUri(configuration);
-        HOST_NAME = configuration["PrimaveraCloudApi:hostName"]!;
-        USER_NAME = configuration["PrimaveraCloudApi:userName"]!;
-        PASSWORD = configuration["PrimaveraCloudApi:password"]!;
+        HOST_NAME = configuration["PrimaveraCloudApi:HostName"]!;
+        USER_NAME = configuration["PrimaveraCloudApi:UserName"]!;
+        PASSWORD = configuration["PrimaveraCloudApi:Password"]!;
     }
 
     private string GetBaseUri(IConfiguration configuration)
     {
-        var versionApi = configuration["PrimaveraCloudApi:versionApi"];
-        var baseUri = configuration["PrimaveraCloudApi:url"];
+        var versionApi = configuration["PrimaveraCloudApi:VersionApi"];
+        var baseUri = configuration["PrimaveraCloudApi:Url"];
         _url = string.IsNullOrEmpty(versionApi) ? $"{baseUri}" : $"{baseUri}/{versionApi}";
         return _url;
     }
 
-    public async Task ExecuteRequests(EventNotification eventNotification, dynamic message)
+    public async Task ExecuteRequests(Transaction transaction, dynamic message)
     {
         try
         {
-            await _httpClientStrategy.GetDataAsync(eventNotification, message);
+            await _httpClientStrategy.GetDataAsync(transaction, message);
         }
         catch (Exception ex) when (ex is NullReferenceException or HttpRequestException)
         {
@@ -65,15 +65,13 @@ public class ApiHttpClient
         }
     }
 
-    public async Task<HttpResponseMessage> SendRequestAsync(dynamic queryParams)
+    public async Task<HttpResponseMessage?> SendRequestAsync(dynamic queryParams)
     {
-        HttpResponseMessage response = null;
-        var apiName = string.Empty;
-        
+        HttpResponseMessage response;
         var fullUrl = new Uri(_url + queryParams);
         var request = new HttpRequestMessage(HttpMethod.Get, fullUrl);
-        var authTokenResponse = GetAuthTokenDetails();
-        SetCredentials(authTokenResponse);
+        var authTokenResponse = await GetAuthTokenDetails();
+        SetCredentials(authTokenResponse!);
         request.Content = new StringContent("", Encoding.UTF8, "application/json");
 
         try
@@ -111,15 +109,15 @@ public class ApiHttpClient
         }
     }
     
-    public Dictionary<string, object> GetAuthTokenDetails()
+    public async Task<Dictionary<string, object>?> GetAuthTokenDetails()
     {
         var requestUri = $"https://{HOST_NAME}/primediscovery/apitoken/request?scope=http://{HOST_NAME}/api";
-        var response = SendRequestAsync(requestUri).Result;
+        var response = await SendRequestAsync(requestUri);
         if (response == null) return null;
 
-        var jsonString = response.Content.ReadAsStringAsync().Result;
+        var jsonString = await response.Content.ReadAsStringAsync();
         var dataList = JsonConvert.DeserializeObject<Dictionary<string, object>>(jsonString);
-        return dataList!;
+        return dataList;
     }
     
     private async Task<HttpResponseMessage?> SendRequestAsync(string requestUri)
@@ -127,8 +125,7 @@ public class ApiHttpClient
         var request = new HttpRequestMessage(HttpMethod.Post, requestUri);
         var credentials = $"{USER_NAME}:{PASSWORD}";
         var credentialsBase64 = Convert.ToBase64String(Encoding.ASCII.GetBytes(credentials));
-        _httpClient.DefaultRequestHeaders.Authorization = 
-            new AuthenticationHeaderValue("Basic", credentialsBase64);
+        _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", credentialsBase64);
         try
         {
             var response = await _httpClient.SendAsync(request);
@@ -142,12 +139,12 @@ public class ApiHttpClient
         }
         catch (Exception ex) when (ex is NullReferenceException or HttpRequestException)
         {
-            await Console.Out.WriteLineAsync(ex.Message);
+            _logger.LogDebug(ex.Message);
             return null;
         }
         catch (Exception ex)
         {
-            await Console.Out.WriteLineAsync(ex.Message);
+            _logger.LogDebug(ex.Message);
             throw;
         }
     }

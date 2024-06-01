@@ -1,17 +1,17 @@
 namespace PCA.Configurations.DependencyInjection;
 public class LaunchSettings
 {
-    public Dictionary<string, Profile> Profiles { get; set; }
+    public Dictionary<string, Profile>? Profiles { get; set; }
 }
 
 public class Profile
 {
-    public string CommandName { get; set; }
+    public string? CommandName { get; set; }
     public bool LaunchBrowser { get; set; }
-    public string LaunchUrl { get; set; }
-    public Dictionary<string, string> EnvironmentVariables { get; set; }
+    public string? LaunchUrl { get; set; }
+    public Dictionary<string, string>? EnvironmentVariables { get; set; }
     public bool DotnetRunMessages { get; set; }
-    public string ApplicationUrl { get; set; }
+    public string? ApplicationUrl { get; set; }
 }
 
 public static class HealthCheckExtensions
@@ -38,9 +38,9 @@ public static class HealthCheckExtensions
             // var profile = launchSettings.Profiles.Values.FirstOrDefault(p => 
             //      p.EnvironmentVariables["LAUNCH_PROFILE"] == profileName);
 
-            foreach (var profile in launchSettings.Profiles.Values)
+            foreach (var profile in launchSettings!.Profiles!.Values)
             {
-                if (profile.EnvironmentVariables["LAUNCH_PROFILE"] == profileName)
+                if (profile.EnvironmentVariables!["LAUNCH_PROFILE"] == profileName)
                 {
                     applicationUrl = profile.ApplicationUrl;
                     Console.WriteLine($"ApplicationUrl for profile {profileName}: {applicationUrl}");
