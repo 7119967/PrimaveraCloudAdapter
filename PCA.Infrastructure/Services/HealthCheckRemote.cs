@@ -8,6 +8,7 @@ public class HealthCheckRemote: IHealthCheck
     {
         _httpClientFactory = httpClientFactory;
     }
+    
     public async Task<HealthCheckResult> CheckHealthAsync(HealthCheckContext context, CancellationToken cancellationToken = new CancellationToken())
     {
         using var httpClient = _httpClientFactory.CreateClient();

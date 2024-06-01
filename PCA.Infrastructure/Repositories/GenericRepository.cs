@@ -68,6 +68,37 @@ public class GenericRepository<T> : IGenericRepository<T> where T : class
         return result;
     }
 
+    public virtual IQueryable<T> GetTracking(
+        Expression<Func<T, bool>>? filter = null, 
+        Func<IQueryable<T>, IOrderedQueryable<T>>? orderBy = null, 
+        string includeProperties = "")
+    {
+        IQueryable<T> source = Set;
+        if (filter != null)
+        {
+            source = source.Where(filter);
+        }
+
+        string[] array = includeProperties.Split(new char[1] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+        foreach (string navigationPropertyPath in array)
+        {
+            source = source.Include(navigationPropertyPath);
+        }
+
+        IQueryable<T> result;
+        if (orderBy == null)
+        {
+            result = source;  // No AsNoTracking call here
+        }
+        else
+        {
+            IQueryable<T> queryable = orderBy(source);
+            result = queryable;
+        }
+
+        return result;
+    }
+    
     public virtual PagedResult<T> Paging(int page, int pageSize, Expression<Func<T, bool>>? filter = null, Func<IQueryable<T>, IOrderedQueryable<T>>? orderBy = null, string includeProperties = "")
     {
         IQueryable<T> queryable = Set;

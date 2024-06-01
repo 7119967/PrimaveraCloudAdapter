@@ -4,7 +4,11 @@ public class MessageProcessor : IMessageProcessor
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly IServiceScope? _scope;
+    private readonly IMapper _mapper;
     private readonly IServiceCollection _services;
+    private readonly IConfiguration _configuration;
+    private readonly ILogger<MessageProcessor> _logger;
+    
     private readonly Dictionary<string, Type> _entityObjectTypeToApiClientTypeMap = new()
     {
         { "ApiEntityWBS", typeof(ApiClientWbs) },
@@ -13,7 +17,7 @@ public class MessageProcessor : IMessageProcessor
         { "ApiEntityResource", typeof(ApiClientResource) },
         { "ApiEntityRelationship", typeof(ApiClientRelationship) },
         { "ApiEntityProjectBudget", typeof(ApiClientProjectBudget) },
-        { "ApiEntityResourceRoleAssignment", typeof(ApiClientAssignment) },
+        { "ApiEntityResourceRoleAssignment", typeof(ApiClientAssignment) }
     };
 
     public MessageProcessor(IServiceCollection services)
@@ -21,7 +25,10 @@ public class MessageProcessor : IMessageProcessor
         _services = services;
         var serviceProvider = services.BuildServiceProvider(true);
         _scope = serviceProvider.CreateScope();
+        _mapper = _scope.ServiceProvider.GetRequiredService<IMapper>();
         _unitOfWork = _scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
+        _configuration = _scope.ServiceProvider.GetRequiredService<IConfiguration>();
+        _logger = _scope.ServiceProvider.GetRequiredService<ILogger<MessageProcessor>>();
     }
     
     public Task ProcessMessageAsync(string json)
@@ -30,8 +37,7 @@ public class MessageProcessor : IMessageProcessor
         {
             if (json is null) return Task.CompletedTask;
             var message = JsonConvert.DeserializeObject(json);
-            Console.WriteLine("New message received from Primavera Cloud is:");
-            Console.WriteLine(JsonConvert.SerializeObject(message, Formatting.Indented));
+            _logger.LogInformation($"New message received from Primavera Cloud is:\n {JsonConvert.SerializeObject(message, Formatting.Indented)}");
             var obj = JsonConvert.DeserializeObject<ApiEntitySubscriptionView>(json);
 
             if (_entityObjectTypeToApiClientTypeMap.TryGetValue(obj!.EntityObjectType, out var apiClientType))
@@ -43,12 +49,13 @@ public class MessageProcessor : IMessageProcessor
             }
             else
             {
-                Console.WriteLine($"Unknown EntityObjectType: {obj.EntityObjectType}");
+                _logger.LogInformation($"Unknown EntityObjectType: {obj.EntityObjectType}");
             }
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"An error occurred while processing the message: {ex.Message}");
+            _logger.LogError($"An error occurred while processing the message: {ex.Message}");
+            throw new BaseException($"An error occurred while processing the message: {ex.Message}");
         }
 
         return Task.CompletedTask;
@@ -56,7 +63,7 @@ public class MessageProcessor : IMessageProcessor
 
     private EventNotification? GetEventNotification(ApiEntitySubscriptionView obj)
     {
-        var existEventNotification = _unitOfWork.EventNotificationRepository.GetNoTracking()
+        var existEventNotification = _unitOfWork.EventNotificationRepository.GetTracking()
             .FirstOrDefault(e => e.EntityObjectType!.Contains(obj.EntityObjectType) && e.MessageType == "SUCCESS");
 
         return existEventNotification;
@@ -64,27 +71,22 @@ public class MessageProcessor : IMessageProcessor
 
     private Subscription? GetSubscription(ApiEntitySubscriptionView obj)
     {
-        var subscription = _unitOfWork.SubscriptionRepository.GetNoTracking()
+        var subscription = _unitOfWork.SubscriptionRepository.GetTracking()
             .FirstOrDefault(e => e.EntityObjectType!.Contains(obj.EntityObjectType));
-
+        
         if (subscription is null && obj.EntityObjectType == "ApiEntityProjectBudget")
         {
             subscription = _unitOfWork.SubscriptionRepository.GetNoTracking()
                 .FirstOrDefault(e => e.EntityObjectType!.Contains("ApiEntityProject"));
         }
-
+        
         return subscription;
     }
 
     private EventNotification SaveEventNotification(ApiEntitySubscriptionView obj)
     {
         var subscription = GetSubscription(obj);
-
-        var eventTypeList = new List<string>
-        {
-            obj.EntityEventType
-        };
-
+        var eventTypeList = new List<string> { obj.EntityEventType };
         var eventNotification = new EventNotification
         {
             // Subscription = subscription!,
@@ -97,17 +99,12 @@ public class MessageProcessor : IMessageProcessor
         };
 
         var existEventNotification = GetEventNotification(obj);
-
         if (existEventNotification != null) 
         {
-            if (existEventNotification.EntityEventType.Contains(obj.EntityEventType))
-            {
-                return existEventNotification;
-            }
-
+            if (existEventNotification.EntityEventType.Contains(obj.EntityEventType)) { return existEventNotification; }
             existEventNotification.EntityEventType.Add(obj.EntityEventType);
             var updated = _unitOfWork.EventNotificationRepository.Update(existEventNotification, new CancellationToken()).Result;
-            return (updated as InsertedEvent<EventNotification>)?.Object!; ; 
+            return (updated as InsertedEvent<EventNotification>)?.Object!;
         }
 
         var entity = _unitOfWork.EventNotificationRepository
@@ -118,16 +115,16 @@ public class MessageProcessor : IMessageProcessor
 
     private void SaveTransaction(EventNotification eventNotification, ApiEntitySubscriptionView obj, dynamic message)
     {
-        var eventDetails = JsonConvert.SerializeObject(message, Formatting.Indented);
         var entity = new Transaction
         {
             EventId = eventNotification.Id,
             EventType = obj.EntityObjectType,
             EventTimeStamp = DateTimeOffset.UtcNow,
-            EventDetails = eventDetails,
-            SystemOrigin = "primavera-ca1.oraclecloud.com",
-            InitiatingUser = "vurbanovich@sarsystems.com"
+            EventDetails = JsonConvert.SerializeObject(message, Formatting.Indented),
+            SystemOrigin = _configuration.GetSection("PrimaveraCloudApi:HostName").Value!,
+            InitiatingUser = _configuration.GetSection("PrimaveraCloudApi:UserName").Value!
         };
+        
         _unitOfWork.TransactionRepository.Insert(entity, new CancellationToken());
     }
 
@@ -136,7 +133,9 @@ public class MessageProcessor : IMessageProcessor
         var apiClientEntity = (T)Activator.CreateInstance(typeof(T), _services!)!;
         var apiHttpClient = new ApiHttpClient(_scope!, apiClientEntity!);
         var json = JsonConvert.SerializeObject(message, Formatting.Indented);
+        _logger.LogInformation($"ExecuteRequest starts: {json}");
         apiHttpClient.ExecuteRequests(eventNotification, json).WaitAsync(new CancellationToken());
+        _logger.LogInformation($"ExecuteRequest completed");
     }
     
 /// <summary>

@@ -4,13 +4,15 @@ public class ApiEventConsumer : BackgroundService, IApiConsumer
 {
     private readonly string HOST_NAME;
     private readonly WebSocketClient _webSocketClient;
+    private readonly ILogger<ApiEventConsumer> _logger;
 
     public ApiEventConsumer(IServiceCollection services)
     {
         var serviceProvider = services.BuildServiceProvider(true);
         var scope = serviceProvider.CreateScope();
         var configuration = scope.ServiceProvider.GetRequiredService<IConfiguration>();
-        HOST_NAME = configuration["PrimaveraCloudApi:hostName"]!;
+        _logger = scope.ServiceProvider.GetRequiredService<ILogger<ApiEventConsumer>>();
+        HOST_NAME = configuration["PrimaveraCloudApi:HostName"]!;
         _webSocketClient = new WebSocketClient(services);
         var apiHttpClient = new ApiHttpClient(services);
         var authTokenResponse = apiHttpClient.GetAuthTokenDetails();
@@ -27,7 +29,8 @@ public class ApiEventConsumer : BackgroundService, IApiConsumer
         }
         catch (Exception e)
         {
-            Console.WriteLine($"Error in event subscription: {e}");
+            _logger.LogError($"Error in event subscription: {e}");
+            throw new BaseException($"Error in event subscription: {e}");
         }
     }
 }

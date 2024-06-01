@@ -16,8 +16,6 @@ public class HealthCheckMemory : IHealthCheck
         CancellationToken cancellationToken = default(CancellationToken))
     {
         var options = _options.Get(context.Registration.Name);
-
-        // Include GC information in the reported diagnostics.
         var allocated = GC.GetTotalMemory(forceFullCollection: false);
         var data = new Dictionary<string, object>()
         {

@@ -39,23 +39,8 @@ public class HealthCheckController : ControllerBase
     [HttpGet("/health-ui")]
     public IActionResult HealthUI()
     {
-        // This will serve the HealthChecks UI from a different endpoint.
         return new RedirectResult("/healthchecks-ui");
     }   
-    
-    // [HttpGet("healthcheck/ready")]
-    // public async Task<ActionResult<string>> HealthCheckReady()
-    // {
-    //     var result = await HealthCheckResult();
-    //     return Content(result, "application/json");
-    // }
-    //
-    // [HttpGet("healthcheck/live")]
-    // public async Task<ActionResult<string>> HealthCheckLive()
-    // {
-    //     var result = await Task.Run(HealthCheckResultUi);
-    //     return Content(result, "application/json");
-    // }
 
     private async Task<string> HealthCheckResult()
     {

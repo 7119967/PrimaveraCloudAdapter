@@ -1,5 +1,16 @@
 {
   "profiles": {
+    "PCA.API": {
+      "commandName": "Project",
+      "dotnetRunMessages": true,
+      "launchBrowser": true,
+      "launchUrl": "swagger",
+      "applicationUrl": "http://localhost:5066",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "LAUNCH_PROFILE": "PCA.API"
+      }
+    },
     "http": {
       "commandName": "Project",
       "launchBrowser": true,

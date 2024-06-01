@@ -25,4 +25,6 @@ global using PCA.Infrastructure.Services;
 global using PCA.Infrastructure.Services.HttpClients;
 global using PCA.Infrastructure.Services.WebSocket;
 global using Microsoft.Extensions.Diagnostics.HealthChecks;
+global using JsonSerializerDefaults = System.Text.Json.JsonSerializerDefaults;
+global using JsonSerializerOptions = System.Text.Json.JsonSerializerOptions;
 

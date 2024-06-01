@@ -50,7 +50,6 @@ public class SubscriptionsController : Controller
         try
         {
             var message = GetJsonObject(model).ToString();
-            await UpdateOrInsert(model, ctn);
             var response = await _apiProducer.SendAsync(message);
             return Ok(response);
         }
@@ -130,20 +129,5 @@ public class SubscriptionsController : Controller
             new JProperty("eventTypes", JArray.FromObject(model.EventTypes)),
             new JProperty("filters", model.Filters)
         );
-    }
-
-    private async Task UpdateOrInsert(SubscriptionView model, CancellationToken ctn)
-    {
-        var entity = _mapper.Map<Subscription>(model);
-        var result = _unitOfWork.SubscriptionRepository.GetNoTracking()
-            .FirstOrDefault(e => e.EntityObjectType == entity.EntityObjectType);
-        if (result != null)
-        {
-            await _unitOfWork.SubscriptionRepository.Update(entity, ctn);
-        }
-        else
-        {
-            await _unitOfWork.SubscriptionRepository.Insert(entity, ctn);
-        }
     }
 }

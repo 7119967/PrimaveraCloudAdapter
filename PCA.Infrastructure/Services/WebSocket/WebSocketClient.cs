@@ -33,11 +33,12 @@ public class WebSocketClient : IWebSocketClient
     {
         try
         {
-            await _webSocket.ConnectAsync(new Uri(uri), CancellationToken.None);
+            if (_webSocket.State != WebSocketState.Open)
+                await _webSocket.ConnectAsync(new Uri(uri), CancellationToken.None);
         }
         catch (Exception ex)
         {
-            _logger.LogInformation($"Connection error: {ex.Message}");
+            _logger.LogError($"Connection error: {ex.Message}");
             throw new BaseException($"Connection error: {ex.Message}");
         }
     }
@@ -54,7 +55,7 @@ public class WebSocketClient : IWebSocketClient
         }
         catch (Exception ex)
         {
-            _logger.LogInformation($"Connection error: {ex.Message}");
+            _logger.LogError($"Connection error: {ex.Message}");
             throw new BaseException($"Connection error: {ex.Message}");
         }
     }
@@ -77,7 +78,7 @@ public class WebSocketClient : IWebSocketClient
         }
         catch (Exception ex)
         {
-            _logger.LogInformation($"Connection error: {ex.Message}");
+            _logger.LogError($"Connection error: {ex.Message}");
             throw new BaseException($"Connection error: {ex.Message}");
         }
     }
@@ -90,7 +91,7 @@ public class WebSocketClient : IWebSocketClient
         }
         catch (Exception ex)
         {
-            _logger.LogInformation($"An error occurred while processing the message: {ex.Message}");
+            _logger.LogError($"An error occurred while processing the message: {ex.Message}");
             throw new BaseException($"An error occurred while processing the message: {ex.Message}");
         }
     }
