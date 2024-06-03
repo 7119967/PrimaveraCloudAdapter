@@ -13,6 +13,7 @@ global using Microsoft.Extensions.Diagnostics.HealthChecks;
 global using Microsoft.Extensions.Hosting;
 global using Microsoft.Extensions.Logging;
 
+global using PCA.Configurations.Application;
 global using PCA.Configurations.AutoMapper;
 global using PCA.Core.Entities;
 global using PCA.Core.Extensions;

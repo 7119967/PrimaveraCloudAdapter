@@ -1,24 +1,24 @@
-namespace PCA.API.Controllers;
+﻿namespace PCA.API.Controllers;
 
 [ApiController]
 [ApiVersion("1.0")]
-[Route("api/wbses")]
-public class WbsesController : Controller
+[Route("api/eventnotifications")]
+public class EventNotificationsController : Controller
 {
     private readonly ILogger _logger;
     private readonly IUnitOfWork _unitOfWork;
-    
-    public WbsesController(ILogger<ActivitiesController> logger, IUnitOfWork unitOfWork)
+
+    public EventNotificationsController(ILogger<EventNotificationsController> logger, IUnitOfWork unitOfWork)
     {
         _logger = logger;
         _unitOfWork = unitOfWork;
     }
-    
+
     [HttpGet("")]
     public async Task<IActionResult> GetAll(CancellationToken ctn = default)
     {
-        var entity = await _unitOfWork.WbsRepository.GetAll(ctn); 
-        
+        var entity = await _unitOfWork.EventNotificationRepository.GetAll(ctn);
+
         if (entity is null)
         {
             _logger.LogInformation("Entity does not exist");
@@ -27,12 +27,12 @@ public class WbsesController : Controller
 
         return Ok(entity);
     }
-    
+
     [HttpGet("id/{id}")]
     public async Task<IActionResult> GetById(long id, CancellationToken ctn = default)
     {
-        var entity = await _unitOfWork.WbsRepository.GetById(id, ctn); 
-        
+        var entity = await _unitOfWork.EventNotificationRepository.GetById(id, ctn);
+
         if (entity is null)
         {
             _logger.LogInformation("Entity does not exist");
@@ -41,13 +41,13 @@ public class WbsesController : Controller
 
         return Ok(entity);
     }
-    
-    [HttpGet("transactionid/{id}")]
-    public async Task<IActionResult> GetByTransactionId(long id, CancellationToken ctn = default)
+
+    [HttpGet("subscriptionid/{id}")]
+    public async Task<IActionResult> GetBySubscriptionId(long id, CancellationToken ctn = default)
     {
-        var entity = await _unitOfWork.WbsRepository.GetTracking()
-            .FirstOrDefaultAsync(e => e.TransactionId == id, ctn); 
-        
+        var entity = await _unitOfWork.EventNotificationRepository.GetTracking()
+            .FirstOrDefaultAsync(e => e.SubscriptionId == id, ctn);
+
         if (entity is null)
         {
             _logger.LogInformation("Entity does not exist");

@@ -1,3 +1,6 @@
+using PCA.Configurations.Application;
+using PCA.Infrastructure.Services.HealthChecks;
+
 namespace PCA.Configurations.DependencyInjection;
 public class LaunchSettings
 {
@@ -34,9 +37,6 @@ public static class HealthCheckExtensions
             var launchSettingsJson = File.ReadAllText(launchSettingsPath);
             var launchSettings = JsonSerializer.Deserialize<LaunchSettings>(launchSettingsJson, 
                 new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-                
-            // var profile = launchSettings.Profiles.Values.FirstOrDefault(p => 
-            //      p.EnvironmentVariables["LAUNCH_PROFILE"] == profileName);
 
             foreach (var profile in launchSettings!.Profiles!.Values)
             {
@@ -51,7 +51,6 @@ public static class HealthCheckExtensions
                     Console.WriteLine($"Profile {profileName} not found in launchSettings.json");
                 }
             }
-
         }
         else
         {
@@ -61,28 +60,25 @@ public static class HealthCheckExtensions
         return applicationUrl;
     }
     
-    private static string? GetDbConnection(IConfiguration configuration, IHostEnvironment env)
-    {
-        return env.IsDevelopment()
-            ? configuration.GetConnectionString("LocalConnection")
-            : configuration.GetConnectionString("ServerConnection");
-    }
-    
     public static void ConfigureHealthChecks(this IServiceCollection services)
     {
         var serviceProvider = services.BuildServiceProvider(true);
         var configuration = serviceProvider.GetRequiredService<IConfiguration>();
         var env = serviceProvider.GetRequiredService<IHostEnvironment>();
-        var connection = GetDbConnection(configuration!, env);
-        var baseUrl = GetApplicationUrl(env);
-        
+        var connection = DbConnectionHelper.GetDbConnection(configuration, env);
+        //var baseUrl = GetApplicationUrl(env);
+
         // services.Configure<HealthChecksUIOptions>(configuration.GetSection("HealthChecksUI"));
+        services.AddSingleton<HealthCheckDatabase>(new HealthCheckDatabase(connection!));
         services.AddHealthChecks()
-            .AddSqlServer(connection!, 
-                healthQuery: "select 1", 
-                name: "SQL Server", 
-                failureStatus: HealthStatus.Unhealthy, 
+            .AddSqlServer(
+                connectionString: connection!,
+                healthQuery: "SELECT 1;",
+                name: "Database", 
+                failureStatus: HealthStatus.Unhealthy,
+                timeout: TimeSpan.FromSeconds(5),
                 tags: new[] { "Feedback", "Database" })
+            .AddCheck<HealthCheckDatabase>("Database Extended")
             .AddCheck<HealthCheckRemote>(
                 "Remote endpoints Health Check", 
                 failureStatus: HealthStatus.Unhealthy, 
@@ -101,7 +97,7 @@ public static class HealthCheckExtensions
         //services.AddHealthChecksUI();
         services.AddHealthChecksUI(opt =>
             {
-                opt.SetEvaluationTimeInSeconds(10); //time in seconds between check    
+                opt.SetEvaluationTimeInSeconds(60); //time in seconds between check    
                 opt.MaximumHistoryEntriesPerEndpoint(60); //maximum history of checks    
                 opt.SetApiMaxActiveRequests(1); //api requests concurrency    
                 // opt.AddHealthCheckEndpoint("feedback api", "/api/health"); //map health check api    

@@ -2,14 +2,14 @@
   "profiles": {
     "PCA.API": {
       "commandName": "Project",
-      "dotnetRunMessages": true,
       "launchBrowser": true,
       "launchUrl": "swagger",
-      "applicationUrl": "http://localhost:5066",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development",
         "LAUNCH_PROFILE": "PCA.API"
-      }
+      },
+      "dotnetRunMessages": true,
+      "applicationUrl": "http://localhost:5066"
     },
     "http": {
       "commandName": "Project",
@@ -38,7 +38,8 @@
       "launchBrowser": true,
       "launchUrl": "swagger",
       "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "LAUNCH_PROFILE": "IIS Express"
       }
     },
     "Docker": {
