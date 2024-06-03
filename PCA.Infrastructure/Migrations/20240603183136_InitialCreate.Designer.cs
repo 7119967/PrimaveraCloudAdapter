@@ -12,7 +12,7 @@ using PCA.Infrastructure.Context;
 namespace PCA.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20240602150850_InitialCreate")]
+    [Migration("20240603183136_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />

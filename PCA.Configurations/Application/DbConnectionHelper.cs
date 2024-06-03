@@ -8,10 +8,6 @@ public static class DbConnectionHelper
             ? configuration.GetConnectionString("LocalConnection")
             : configuration.GetConnectionString("ServerConnection");
 
-        var loggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
-        var logger = loggerFactory.CreateLogger("ConnectionStringLogger");
-        logger.LogInformation("Using connection string: {ConnectionString}", connectionString);
-
         return connectionString;
     }
 }

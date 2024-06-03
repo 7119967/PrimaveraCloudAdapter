@@ -2,7 +2,7 @@
 
 public static class DbInitializer
 {
-    public static void IsInitializedDatabase(IServiceCollection services, ILogger logger)
+    public static void InitializeDatabase(IServiceCollection services, ILogger logger)
     {
         var serviceProvider = services.BuildServiceProvider();
         using var scope = serviceProvider.CreateScope();

@@ -38,7 +38,7 @@ public static class ServiceCollectionExtensions
 
         try
         {
-            DbInitializer.IsInitializedDatabase(services, logger);
+            DbInitializer.InitializeDatabase(services, logger);
         }
         catch (Exception ex)
         {
