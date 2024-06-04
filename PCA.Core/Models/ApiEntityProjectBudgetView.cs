@@ -2,6 +2,6 @@ namespace PCA.Core.Models;
 
 public class ApiEntityProjectBudgetView
 {
-    [JsonProperty("primaryKey")] 
+    [JsonPropertyName("primaryKey")] 
     public int? PrimaryKey { get; set; }
 }

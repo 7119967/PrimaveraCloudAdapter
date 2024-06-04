@@ -19,7 +19,11 @@ public abstract class BaseHttpClient<T> : IHttpClientStrategy<HttpResponseMessag
 
     protected async Task SaveData(Transaction transaction, dynamic message)
     {
-        var eventDetails = JsonConvert.SerializeObject(message, Formatting.Indented);
+        var options = new JsonSerializerOptions
+        {
+            WriteIndented = true
+        };
+        var eventDetails = JsonSerializer.Serialize(message, options);
         await InsertEntity(transaction, eventDetails);
     }
 

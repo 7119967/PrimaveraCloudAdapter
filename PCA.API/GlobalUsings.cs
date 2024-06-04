@@ -9,6 +9,7 @@ global using HealthChecks.UI.Client;
 
 global using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 global using Microsoft.AspNetCore.Mvc;
+global using Microsoft.EntityFrameworkCore;
 global using Microsoft.Extensions.Diagnostics.HealthChecks;
 global using Microsoft.Extensions.Logging;
 
@@ -21,4 +22,3 @@ global using PCA.Core.Extensions;
 global using PCA.Core.Interfaces;
 global using PCA.Core.Interfaces.Services;
 global using PCA.Core.Models;
-global using Microsoft.EntityFrameworkCore;

@@ -1,4 +1,3 @@
-using System.ComponentModel.DataAnnotations;
 namespace PCA.Core.Models;
 
 public class SubscriptionView

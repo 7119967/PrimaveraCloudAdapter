@@ -1,6 +1,4 @@
-﻿using PCA.Core.Interfaces.Entities;
-
-namespace PCA.Core.Utils;
+﻿namespace PCA.Core.Utils;
 
 public class InsertedEvent<T> : IEvent<T>
 {

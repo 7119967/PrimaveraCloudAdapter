@@ -2,18 +2,18 @@ namespace PCA.Core.Models;
 
 public class ApiEntitySubscriptionView
 {
-    [JsonProperty("messageType")]
+    [JsonPropertyName("messageType")]
     public string? MessageType { get; set; }
 
-    [JsonProperty("subscription")]
+    [JsonPropertyName("subscription")]
     public bool Subscription { get; set; }
 
-    [JsonProperty("entityObjectType")]
+    [JsonPropertyName("entityObjectType")]
     public string? EntityObjectType { get; set; }
 
-    [JsonProperty("entityEventType")]
+    [JsonPropertyName("entityEventType")]
     public string? EntityEventType { get; set; }
 
-    [JsonProperty("message")]
+    [JsonPropertyName("message")]
     public string? MessageContent { get; set; }
 }

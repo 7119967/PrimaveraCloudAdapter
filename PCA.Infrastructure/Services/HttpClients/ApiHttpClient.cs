@@ -116,7 +116,7 @@ public class ApiHttpClient
         if (response == null) return null;
 
         var jsonString = await response.Content.ReadAsStringAsync();
-        var dataList = JsonConvert.DeserializeObject<Dictionary<string, object>>(jsonString);
+        var dataList = JsonSerializer.Deserialize<Dictionary<string, object>>(jsonString);
         return dataList;
     }
     
@@ -160,7 +160,8 @@ public class ApiHttpClient
     {
         var tokenAuth = $"Bearer {authTokenResponse["accessToken"]}";
         _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", authTokenResponse["accessToken"].ToString());
-        var headers = authTokenResponse["requestHeaders"] as JObject;
+        var json = JsonSerializer.Serialize(authTokenResponse["requestHeaders"]);
+        var headers = JsonSerializer.Deserialize<Dictionary<string, string>>(json);
         foreach (var header in headers!)
         {
             _httpClient.DefaultRequestHeaders.Add(header.Key, header.Value!.ToString());

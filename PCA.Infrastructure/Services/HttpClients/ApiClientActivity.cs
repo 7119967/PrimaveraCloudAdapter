@@ -4,7 +4,11 @@ public class ApiClientActivity(IServiceCollection services) : BaseHttpClient<Api
 {
     public override async Task GetDataAsync(Transaction transaction, dynamic json)
     {
-        var apiEntity = JsonConvert.DeserializeObject<ApiEntityActivityView>(json);
+        var options = new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true,
+        };
+        var apiEntity = JsonSerializer.Deserialize<ApiEntityActivityView>(json, options);
         var requestUri = $"/api/restapi/activity/{apiEntity!.PrimaryKey}";
         var response = await HttpClient.SendRequestAsync(requestUri);
 
@@ -15,7 +19,7 @@ public class ApiClientActivity(IServiceCollection services) : BaseHttpClient<Api
         }
 
         var jsonString = await response.Content.ReadAsStringAsync();
-        var data = JsonConvert.DeserializeObject(jsonString);
+        var data = JsonSerializer.Deserialize<dynamic>(jsonString, options);
         await SaveData(transaction, data!);
     }
 

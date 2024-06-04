@@ -2,6 +2,7 @@ namespace PCA.Core.Entities;
 
 public class EventNotification: BaseEntity
 {
+    [JsonIgnore] 
     public virtual Subscription? Subscription { get; set; }
     public long SubscriptionId { get; set; }
     public bool IsEnabled { get; set; }

@@ -2,15 +2,15 @@
 
 public class Subscription: BaseEntity
 {
-    [JsonProperty("subscription")]
+    [JsonPropertyName("subscription")]
     public bool IsEnabled { get; set; }
     
-    [JsonProperty("entityObjectType")]
+    [JsonPropertyName("entityObjectType")]
     public string? EntityObjectType { get; set; }
     
-    [JsonProperty("eventTypes")]
+    [JsonPropertyName("eventTypes")]
     public List<string> EventTypes { get; set; } = new();
     
-    [JsonProperty("filters")]
+    [JsonPropertyName("filters")]
     public string? Filters { get; set; }
 }

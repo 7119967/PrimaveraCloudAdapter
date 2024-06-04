@@ -35,17 +35,21 @@ public class MessageProcessor : IMessageProcessor
         {
             if (json is null) return;
 
-            var message = JsonConvert.DeserializeObject(json);
-            _logger.LogInformation($"New message received from Primavera Cloud is:\n {JsonConvert.SerializeObject(message, Formatting.Indented)}");
-            var obj = JsonConvert.DeserializeObject<ApiEntitySubscriptionView>(json);
+            var message = JsonSerializer.Deserialize<dynamic>(json);
+            var options = new JsonSerializerOptions
+            {
+                WriteIndented = true
+            };
+            _logger.LogInformation($"New message received from Primavera Cloud is:\n {JsonSerializer.Serialize(message, options)}");
+            var obj = JsonSerializer.Deserialize<ApiEntitySubscriptionView>(json);
 
             if (_entityObjectTypeToApiClientTypeMap.TryGetValue(obj!.EntityObjectType!, out var apiClientType))
             {
                 var method = typeof(MessageProcessor)
                     .GetMethod("ProcessApiEntity", BindingFlags.NonPublic | BindingFlags.Instance)!
                     .MakeGenericMethod(apiClientType);
-                var task = (Task)method.Invoke(this, new object[] { obj, message! });
-                await task;
+                var task = (Task)method.Invoke(this, new object[] { obj, message! })!;
+                await task!;
             }
             else
             {
@@ -111,12 +115,16 @@ public class MessageProcessor : IMessageProcessor
 
     private async Task<Transaction> SaveTransaction(EventNotification eventNotification, ApiEntitySubscriptionView obj, dynamic message)
     {
+        var options = new JsonSerializerOptions
+        {
+            WriteIndented = true
+        };
         var entity = new Transaction
         {
             EventId = eventNotification.Id,
             EventType = obj.EntityObjectType,
             EventTimeStamp = DateTimeOffset.UtcNow,
-            EventDetails = JsonConvert.SerializeObject(message, Formatting.Indented),
+            EventDetails = JsonSerializer.Serialize(message, options),
             SystemOrigin = _configuration.GetSection("PrimaveraCloudApi:HostName").Value!,
             InitiatingUser = _configuration.GetSection("PrimaveraCloudApi:UserName").Value!
         };
@@ -127,9 +135,13 @@ public class MessageProcessor : IMessageProcessor
 
     private async Task CallApiClient<T>(Transaction transaction, dynamic message) where T : IHttpClientStrategy<HttpResponseMessage>
     {
+        var options = new JsonSerializerOptions
+        {
+            WriteIndented = true
+        };
         var apiClientEntity = (T)Activator.CreateInstance(typeof(T), _services)!;
         var apiHttpClient = new ApiHttpClient(_scope!, apiClientEntity);
-        var json = JsonConvert.SerializeObject(message, Formatting.Indented);
+        var json = JsonSerializer.Serialize(message, options);
         _logger.LogInformation($"ExecuteRequest starts with :\n {json}");
         await apiHttpClient.ExecuteRequests(transaction, json);
         _logger.LogInformation($"ExecuteRequest completed");

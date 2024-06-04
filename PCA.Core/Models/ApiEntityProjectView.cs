@@ -2,44 +2,44 @@ namespace PCA.Core.Models;
 
 public class ApiEntityProjectView
 {
-    [JsonProperty("messageType")] 
+    [JsonPropertyName("messageType")] 
     public string? MessageType { get; set; }
 
-    [JsonProperty("code")] 
+    [JsonPropertyName("code")] 
     public string? Code { get; set; }
 
-    [JsonProperty("eventType")] 
+    [JsonPropertyName("eventType")] 
     public string? EventType { get; set; }
 
-    [JsonProperty("primaryKey")] 
+    [JsonPropertyName("primaryKey")] 
     public int? PrimaryKey { get; set; }
 
-    [JsonProperty("workspaceId")] 
+    [JsonPropertyName("workspaceId")] 
     public int? WorkspaceId { get; set; }
 
-    [JsonProperty("workspaceCode")] 
+    [JsonPropertyName("workspaceCode")] 
     public string? WorkspaceCode { get; set; }
 
-    [JsonProperty("entityObjectType")] 
+    [JsonPropertyName("entityObjectType")] 
     public string? EntityObjectType { get; set; }
 
-    [JsonProperty("updatedFields")] 
+    [JsonPropertyName("updatedFields")] 
     public UpdatedFields? UpdatedFields { get; set; }
 }
 
 public class UpdatedFields
 {
-    [JsonProperty("noResourceActivityCount")]
+    [JsonPropertyName("noResourceActivityCount")]
     public int? NoResourceActivityCount { get; set; }
 
-    [JsonProperty("totalActivityCount")] public int? TotalActivityCount { get; set; }
+    [JsonPropertyName("totalActivityCount")] public int? TotalActivityCount { get; set; }
 
-    [JsonProperty("noPredecessorActivityCount")]
+    [JsonPropertyName("noPredecessorActivityCount")]
     public int? NoPredecessorActivityCount { get; set; }
 
-    [JsonProperty("openEndsActivityCount")]
+    [JsonPropertyName("openEndsActivityCount")]
     public int? OpenEndsActivityCount { get; set; }
 
-    [JsonProperty("noSuccessorActivityCount")]
+    [JsonPropertyName("noSuccessorActivityCount")]
     public int? NoSuccessorActivityCount { get; set; }
 }

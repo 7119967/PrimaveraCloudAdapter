@@ -171,7 +171,7 @@ public class GenericRepository<T> : IGenericRepository<T> where T : class
             }
 
             await Context.SaveChangesAsync(cancellationToken);
-            return (IEvent<T>)(object)new UpdatedEvent<T>("saved");
+            return (IEvent<T>)(object)new UpdatedEvent<T>(entityToUpdate, "saved");
         }
         catch (Exception ex)
         {

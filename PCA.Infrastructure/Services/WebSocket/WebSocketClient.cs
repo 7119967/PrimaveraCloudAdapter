@@ -22,7 +22,8 @@ public class WebSocketClient : IWebSocketClient
     {
         var tokenAuth = $"Bearer {authTokenResponse["accessToken"]}";
         _webSocket.Options.SetRequestHeader("Authorization", tokenAuth);
-        var headers = authTokenResponse["requestHeaders"] as JObject;
+        var json = JsonSerializer. Serialize(authTokenResponse["requestHeaders"]);
+        var headers = JsonSerializer.Deserialize<Dictionary<string, string>>(json);
         foreach (var header in headers!)
         {
             _webSocket.Options.SetRequestHeader(header.Key, header.Value!.ToString());

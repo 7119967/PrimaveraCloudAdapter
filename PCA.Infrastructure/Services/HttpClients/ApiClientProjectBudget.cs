@@ -4,7 +4,11 @@ public class ApiClientProjectBudget(IServiceCollection services) : BaseHttpClien
 {
     public override async Task GetDataAsync(Transaction transaction, dynamic json)
     {
-        var apiEntity = JsonConvert.DeserializeObject<ApiEntityProjectBudgetView>(json);
+        var options = new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true,
+        };
+        var apiEntity = JsonSerializer.Deserialize<ApiEntityProjectBudgetView>(json, options);
         var requestUri = $"/api/restapi/projectBudget/{apiEntity!.PrimaryKey}";
         var response = await HttpClient.SendRequestAsync(requestUri);
 
@@ -15,7 +19,7 @@ public class ApiClientProjectBudget(IServiceCollection services) : BaseHttpClien
         }
 
         var jsonString = await response.Content.ReadAsStringAsync();
-        var data = JsonConvert.DeserializeObject(jsonString);
+        var data = JsonSerializer.Deserialize<dynamic>(jsonString, options);
         await SaveData(transaction, data!);
     }
 

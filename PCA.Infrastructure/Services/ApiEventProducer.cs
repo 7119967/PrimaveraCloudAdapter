@@ -1,3 +1,5 @@
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
+
 namespace PCA.Infrastructure.Services;
 
 public class ApiEventProducer : IApiProducer
@@ -48,7 +50,12 @@ public class ApiEventProducer : IApiProducer
         Subscription entity;
         try
         {
-            entity = JsonConvert.DeserializeObject<Subscription>(model)!;
+            var options = new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true,
+            };
+            entity = JsonSerializer.Deserialize<Subscription>(model, options)!;
+            
             if (entity == null)
             {
                 _logger.LogError($"Deserialized object is null");
@@ -67,10 +74,12 @@ public class ApiEventProducer : IApiProducer
         if (result != null)
         {
             var updated = await _unitOfWork.SubscriptionRepository.Update(result, ctn);
-            return $"Subscription {(updated as InsertedEvent<Subscription>)?.Object.EntityObjectType} was sent and updated successfully";
+            var updatedObject = updated as UpdatedEvent<Subscription>;
+            return $"Subscription of {updatedObject!.Object.EntityObjectType} was sent and updated successfully";
         }
 
         var created =await _unitOfWork.SubscriptionRepository.Insert(entity, ctn);
-        return $"Subscription {(created as InsertedEvent<Subscription>)?.Object.EntityObjectType} was sent and created successfully";
+        var createdObject = created as InsertedEvent<Subscription>;
+        return $"Subscription of {createdObject!.Object.EntityObjectType} was sent and created successfully";
     }
 }
