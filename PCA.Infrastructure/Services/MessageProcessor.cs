@@ -65,21 +65,22 @@ public class MessageProcessor : IMessageProcessor
 
     private async Task<EventNotification?> GetEventNotification(ApiEntitySubscriptionView obj)
     {
-        var existEventNotification = await _unitOfWork.EventNotificationRepository.GetNoTracking()
+        using var scope = _scope.ServiceProvider.CreateScope();
+        var uow = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
+        return await uow.EventNotificationRepository
+            .GetNoTracking()
             .FirstOrDefaultAsync(e => e.EntityObjectType!
-                .Contains(obj.EntityObjectType!) && e.MessageType == "SUCCESS");
-
-        return existEventNotification;
+                .Contains(obj.EntityObjectType!) && e.MessageType == "SUCCESS");;
     }
 
-    private async Task<Subscription?> GetSubscription(ApiEntitySubscriptionView obj)
+    private async Task<Subscription?> GetSubscription(ApiEntitySubscriptionView obj, IUnitOfWork uow)
     {
-        var subscription = await _unitOfWork.SubscriptionRepository.GetNoTracking()
+        var subscription = await uow.SubscriptionRepository.GetNoTracking()
             .FirstOrDefaultAsync(e => e.EntityObjectType!.Contains(obj.EntityObjectType!));
         
         if (subscription is null && obj.EntityObjectType == "ApiEntityProjectBudget")
         {
-            subscription = await _unitOfWork.SubscriptionRepository.GetNoTracking()
+            subscription = await uow.SubscriptionRepository.GetNoTracking()
                 .FirstOrDefaultAsync(e => e.EntityObjectType!.Contains("ApiEntityProject"));
         }
         
@@ -88,7 +89,11 @@ public class MessageProcessor : IMessageProcessor
 
     private async Task<EventNotification> SaveEventNotification(ApiEntitySubscriptionView obj)
     {
-        var subscription = await GetSubscription(obj);
+        using var scope = _scope.ServiceProvider.CreateScope();
+        var uow = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
+        ArgumentNullException.ThrowIfNull(uow);
+        
+        var subscription = await GetSubscription(obj, uow);
         var eventTypeList = new List<string> { obj.EntityEventType! };
         var eventNotification = new EventNotification
         {
@@ -105,11 +110,11 @@ public class MessageProcessor : IMessageProcessor
         {
             if (existEventNotification.EntityEventType.Contains(obj.EntityEventType!)) { return existEventNotification; }
             existEventNotification.EntityEventType.Add(obj.EntityEventType!);
-            var updated = await _unitOfWork.EventNotificationRepository.Update(existEventNotification, new CancellationToken());
+            var updated = await uow.EventNotificationRepository.Update(existEventNotification, new CancellationToken());
             return (updated as InsertedEvent<EventNotification>)?.Object!;
         }
 
-        var entry = await _unitOfWork.EventNotificationRepository.Insert(eventNotification, new CancellationToken());
+        var entry = await uow.EventNotificationRepository.Insert(eventNotification, new CancellationToken());
         return (entry as InsertedEvent<EventNotification>)?.Object!;
     }
 

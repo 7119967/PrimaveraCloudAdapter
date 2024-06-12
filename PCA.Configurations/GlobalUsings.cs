@@ -29,3 +29,5 @@ global using PCA.Infrastructure.Services.WebSocket;
 
 global using JsonSerializerOptions = System.Text.Json.JsonSerializerOptions;
 
+global using Newtonsoft.Json.Linq;
+

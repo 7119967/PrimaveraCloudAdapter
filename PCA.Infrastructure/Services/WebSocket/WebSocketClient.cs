@@ -6,6 +6,8 @@ public class WebSocketClient : IWebSocketClient
     private readonly MessageProcessor _messageProcessor;
     private readonly ILogger<WebSocketClient> _logger;
 
+    public WebSocketState State { get; set; }
+
     /// <summary>
     /// 
     /// </summary>
