@@ -27,12 +27,14 @@ public static class ServiceCollectionExtensions
 
         services.AddHttpContextAccessor();
         services.AddSingleton<ServicesMappingProfile>();
+        services.AddTransient<IHelper, Helper>();
         services.AddTransient<IUnitOfWork, UnitOfWork>();
         services.AddAutoMapper(Assembly.GetExecutingAssembly());
         services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
         services.AddTransient<ApiHttpClient>(_ => new ApiHttpClient(services));
         services.AddTransient<IWebSocketClient>(_ => new WebSocketClient(services));
         services.AddHostedService<ApiEventConsumer>(_ => new ApiEventConsumer(services));
+        services.AddHostedService<SubscriptionResumer>(_ => new SubscriptionResumer(services));
         services.AddTransient<IApiProducer, ApiEventProducer>(_ => new ApiEventProducer(services));
         services.AddTransient<IMessageProcessor, MessageProcessor>(_ => new MessageProcessor(services));
 

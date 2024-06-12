@@ -18,7 +18,9 @@ public class ApiEventConsumer : BackgroundService, IApiConsumer
         var authTokenResponse = apiHttpClient.GetAuthTokenDetails().Result;
         _webSocketClient.SetCredentials(authTokenResponse!);
     }
-    
+
+    public bool IsConnected => _webSocketClient.State == WebSocketState.Open;
+
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         try

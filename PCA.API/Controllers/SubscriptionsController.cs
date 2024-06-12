@@ -6,6 +6,7 @@ namespace PCA.API.Controllers;
 public class SubscriptionsController : Controller
 {
     private readonly IMapper _mapper;
+    private readonly IHelper _helper;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IApiProducer _apiProducer;
     private readonly ILogger<SubscriptionsController> _logger;
@@ -19,12 +20,14 @@ public class SubscriptionsController : Controller
     /// <param name="apiProducer"></param>
     public SubscriptionsController(
         IMapper mapper,
+        IHelper helper,
         IUnitOfWork unitOfWork,
         IApiProducer apiProducer,
         ILogger<SubscriptionsController> logger
     )
     {
         _logger = logger;
+        _helper = helper;
         _mapper = mapper;
         _unitOfWork = unitOfWork;
         _apiProducer = apiProducer;
@@ -49,7 +52,7 @@ public class SubscriptionsController : Controller
        
         try
         {
-            var message = GetJsonObject(model).ToString();
+            var message = _helper.GetJsonObject(model).ToString();
             var response = await _apiProducer.SendAsync(message);
             return Ok(response);
         }
@@ -88,7 +91,7 @@ public class SubscriptionsController : Controller
     public async Task<IActionResult> Edit([FromBody] Subscription entity, CancellationToken ctn = default)
     {
         var model = _mapper.Map<SubscriptionView>(entity);
-        var message = JsonConvert.SerializeObject(GetJsonObject(model));
+        var message = JsonConvert.SerializeObject(_helper.GetJsonObject(model));
         await _apiProducer.SendAsync(message);
         var entry = await _unitOfWork.SubscriptionRepository.GetById(entity.Id, ctn);
 
@@ -111,7 +114,7 @@ public class SubscriptionsController : Controller
         {
             var model = _mapper.Map<SubscriptionView>(entity);
             model.IsEnabled = false;
-            var message = JsonConvert.SerializeObject(GetJsonObject(model));
+            var message = JsonConvert.SerializeObject(_helper.GetJsonObject(model));
             await _apiProducer.SendAsync(message);
             await _unitOfWork.SubscriptionRepository.Delete(id, ctn);
             return Ok("Entity removed successfully");
@@ -121,13 +124,5 @@ public class SubscriptionsController : Controller
         throw new BaseException("Entity does not exist");
     }
 
-    private JObject GetJsonObject(SubscriptionView model)
-    {
-        return new JObject(
-            new JProperty("subscription", model.IsEnabled),
-            new JProperty("entityObjectType", model.EntityObjectType),
-            new JProperty("eventTypes", JArray.FromObject(model.EventTypes)),
-            new JProperty("filters", model.Filters)
-        );
-    }
+
 }

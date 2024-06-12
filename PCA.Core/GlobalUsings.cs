@@ -10,3 +10,5 @@ global using PCA.Core.Extensions;
 global using PCA.Core.Interfaces.Entities;
 global using PCA.Core.Interfaces.Repositories;
 global using PCA.Core.Utils;
+global using Newtonsoft.Json.Linq;
+global using PCA.Core.Models;

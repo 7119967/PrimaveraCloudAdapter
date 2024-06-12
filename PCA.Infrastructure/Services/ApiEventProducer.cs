@@ -1,5 +1,3 @@
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
-
 namespace PCA.Infrastructure.Services;
 
 public class ApiEventProducer : IApiProducer
@@ -24,14 +22,24 @@ public class ApiEventProducer : IApiProducer
         var authTokenResponse = apiHttpClient.GetAuthTokenDetails().Result;
         _webSocketClient.SetCredentials(authTokenResponse!);
     }
-    
+
+    public bool IsConnected => _webSocketClient.State == WebSocketState.Open;
+
     public async Task<string> SendAsync(string message)
     {
         try
         {
             var uri = $"wss://{HOST_NAME}/api/events";
-            await _webSocketClient.ConnectAsync(uri);
-            await _webSocketClient.SendMessageAsync(message);
+            if (IsConnected)
+            {
+                await _webSocketClient.SendMessageAsync(message);
+            }
+            else
+            {
+                await _webSocketClient.ConnectAsync(uri);
+                await _webSocketClient.SendMessageAsync(message); 
+            }
+
             return await UpdateOrInsert(message);
         }
         catch (Exception e)
